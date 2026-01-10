@@ -54,6 +54,9 @@ const paidBySelect = document.getElementById("paidBy");
 const noteInput = document.getElementById("note");
 const addExpenseBtn = document.getElementById("addExpense");
 
+// participants UI
+const toggleParticipantsBtn = document.getElementById("toggleParticipants");
+const participantsBox = document.getElementById("participantsBox");
 const participantsWrap = document.getElementById("participantsWrap");
 const selectAllBtn = document.getElementById("selectAll");
 const selectNoneBtn = document.getElementById("selectNone");
@@ -109,7 +112,19 @@ function cleanupSubs() {
   unsubExpenses = null;
 }
 
-/* ---------------- UI builders ---------------- */
+/* ---------------- UI helpers ---------------- */
+function toggleParticipantsBox(force) {
+  if (!participantsBox) return;
+  const show =
+    typeof force === "boolean"
+      ? force
+      : (participantsBox.style.display === "none" || participantsBox.style.display === "");
+  participantsBox.style.display = show ? "block" : "none";
+  if (toggleParticipantsBtn) {
+    toggleParticipantsBtn.textContent = show ? "Nascondi partecipanti" : "Seleziona partecipanti";
+  }
+}
+
 function buildNameInputs() {
   if (!namesWrap) return;
 
@@ -269,7 +284,6 @@ function renderSaldo() {
   const lines = transfers.map((t) => {
     return `<div style="padding:8px 0;border-bottom:1px solid #2a2a2a">
       <b>${userName(t.from)}</b> <span style="color:#ff5c5c;font-weight:900">deve a</span> <b>${userName(t.to)}</b>: <b>${euro(t.amount)}</b>
-
     </div>`;
   }).join("");
 
@@ -382,7 +396,6 @@ async function enterRoom(id) {
       const data = snap.data() || {};
       roomUsers = Array.isArray(data.users) ? data.users : [];
 
-      // Niente nomi “fissi”: se manca tutto, due placeholder generici
       if (!roomUsers.length) {
         roomUsers = [
           { id: "u1", name: "Utente 1" },
@@ -467,16 +480,18 @@ async function addExpense() {
     createdAt: serverTimestamp(),
   });
 
-  // Reset richiesto: chiude/resettare "dividi tra"
-  // (qui la lista resta visibile, ma la resettiamo)
+  // Reset + chiudi box (come richiesto)
   amountInput.value = "";
   noteInput.value = "";
   setAllParticipants(false);
-  renderPaidByOptions(); // torna al placeholder "Chi ha pagato?"
+  renderPaidByOptions();
+  toggleParticipantsBox(false);
 }
 
 /* ---------------- Events ---------------- */
 userCountSelect?.addEventListener("change", buildNameInputs);
+
+toggleParticipantsBtn?.addEventListener("click", () => toggleParticipantsBox());
 
 selectAllBtn?.addEventListener("click", () => setAllParticipants(true));
 selectNoneBtn?.addEventListener("click", () => setAllParticipants(false));
@@ -539,6 +554,7 @@ window.addEventListener("hashchange", () => {
 (function boot() {
   setStatus("Accesso…");
   buildNameInputs();
+  toggleParticipantsBox(false);
 
   ensureAuth()
     .then(() => {
@@ -554,4 +570,3 @@ window.addEventListener("hashchange", () => {
       render();
     });
 })();
-
