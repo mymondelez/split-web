@@ -479,7 +479,8 @@ async function addExpense() {
     payerId,
     participantIds,
     note,
-    createdAt: serverTimestamp,
+    createdAt: serverTimestamp(),
+
   });
 
   // Reset + chiudi box
