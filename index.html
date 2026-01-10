@@ -112,6 +112,28 @@
       padding:12px;
       background:#0f0f0f;
     }
+
+@media (prefers-reduced-motion: no-preference) {
+  .logo-anim {
+    animation: spltPulse 2.2s ease-in-out infinite;
+    transform-origin: center;
+  }
+  .wordmark-anim {
+    animation: spltGlow 2.2s ease-in-out infinite;
+  }
+}
+
+@keyframes spltPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+@keyframes spltGlow {
+  0%, 100% { text-shadow: 0 0 0 rgba(30, 215, 96, 0); }
+  50% { text-shadow: 0 0 14px rgba(30, 215, 96, 0.35); }
+}
+
+    
   </style>
 </head>
 
