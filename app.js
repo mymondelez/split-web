@@ -46,6 +46,8 @@ const leaveRoomBtn = document.getElementById("leaveRoom");
 const saldoDiv = document.getElementById("saldo");
 const amountInput = document.getElementById("amount");
 const paidBySelect = document.getElementById("paidBy");
+const forWhomSelect = document.getElementById("forWhom");
+
 const noteInput = document.getElementById("note");
 const addExpenseBtn = document.getElementById("addExpense");
 
@@ -85,13 +87,28 @@ function computeBalance() {
   // positivo => Lulù deve a Simon
   // negativo => Simon deve a Lulù
   let b = 0;
+
   for (const e of expenses) {
-    const half = (e.amount || 0) / 2;
-    if (e.paidBy === "SIMON") b += half;
-    else b -= half;
+    const amount = e.amount || 0;
+    const paidBy = e.paidBy; // SIMON / LULU
+    const forWhom = e.forWhom || "BOTH"; // compatibilità con spese vecchie
+
+    if (forWhom === "BOTH") {
+      const half = amount / 2;
+      if (paidBy === "SIMON") b += half;
+      else b -= half;
+    } else if (forWhom === "SIMON") {
+      // spesa solo di Simon
+      if (paidBy === "LULU") b -= amount; // Simon deve a Lulù
+    } else if (forWhom === "LULU") {
+      // spesa solo di Lulù
+      if (paidBy === "SIMON") b += amount; // Lulù deve a Simon
+    }
   }
+
   return b;
 }
+
 
 function render() {
   if (!roomId) {
@@ -127,10 +144,17 @@ function render() {
   emptyDiv.style.display = "none";
 
   for (const e of expenses) {
-    const who = e.paidBy === "SIMON" ? USER_SIMON : USER_LULU;
-    const note = e.note && e.note.trim() ? ` — ${e.note}` : "";
-    const li = document.createElement("li");
-    li.textContent = `${who} ha pagato ${euro(e.amount || 0)}${note}`;
+const who = e.paidBy === "SIMON" ? USER_SIMON : USER_LULU;
+const note = e.note && e.note.trim() ? ` — ${e.note}` : "";
+const forWhom = e.forWhom || "BOTH";
+const tag =
+  forWhom === "BOTH" ? " — (50/50)" :
+  forWhom === "SIMON" ? ` — (solo ${USER_SIMON})` :
+  ` — (solo ${USER_LULU})`;
+
+const li = document.createElement("li");
+li.textContent = `${who} ha pagato ${euro(e.amount || 0)}${tag}${note}`;
+
     li.title = "Clicca per eliminare questa spesa";
     li.style.cursor = "pointer";
     li.addEventListener("click", async () => {
@@ -194,16 +218,14 @@ async function addExpense() {
     return;
   }
 
-  await addDoc(collection(db, "rooms", roomId, "expenses"), {
-    amount: Math.round(n * 100) / 100,
-    paidBy: paidBySelect.value, // SIMON o LULU
-    note: noteInput.value.trim(), // causale/nota
-    createdAt: serverTimestamp(),
-  });
+await addDoc(collection(db, "rooms", roomId, "expenses"), {
+  amount: Math.round(n * 100) / 100,
+  paidBy: paidBySelect.value,
+  forWhom: forWhomSelect.value, // ✅ nuovo
+  note: noteInput.value.trim(),
+  createdAt: serverTimestamp(),
+});
 
-  amountInput.value = "";
-  noteInput.value = "";
-}
 
 copyLinkBtn.addEventListener("click", async () => {
   const link = shareLinkA.href;
