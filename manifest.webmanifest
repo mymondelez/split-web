@@ -1,0 +1,8 @@
+{
+  "name": "Split 2 — Simon Simon / Lulù",
+  "short_name": "Split2",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff"
+}
