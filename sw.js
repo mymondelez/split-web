@@ -1,4 +1,4 @@
-const CACHE = "split2-v3";
+const CACHE = "split2-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -23,7 +23,7 @@ self.addEventListener("activate", (event) => {
   })());
 });
 
-// Network-first per index/app (così non resta mai bloccato su versioni vecchie)
+// Network-first per index/app/manifest per non restare mai bloccati su vecchie versioni
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   const isCore =
@@ -47,7 +47,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // per il resto va bene cache-first
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
