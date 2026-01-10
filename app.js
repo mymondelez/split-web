@@ -308,7 +308,7 @@ function renderExpensesList() {
     const participants = Array.isArray(e.participantIds) ? e.participantIds : [];
     const note = e.note && e.note.trim() ? ` — ${e.note}` : "";
 
-    const tag = ` — (tra: ${participants.map(userName).join(", ")})`;
+    const tag = ` — (Per: ${participants.map(userName).join(", ")})`;
 
     const li = document.createElement("li");
     li.textContent = `${payerName} ha pagato ${euro(amount)}${tag}${note}`;
