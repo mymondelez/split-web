@@ -54,9 +54,6 @@ const paidBySelect = document.getElementById("paidBy");
 const noteInput = document.getElementById("note");
 const addExpenseBtn = document.getElementById("addExpense");
 
-const splitAllRadio = document.getElementById("splitAll");
-const splitSomeRadio = document.getElementById("splitSome");
-const participantsBox = document.getElementById("participantsBox");
 const participantsWrap = document.getElementById("participantsWrap");
 const selectAllBtn = document.getElementById("selectAll");
 const selectNoneBtn = document.getElementById("selectNone");
@@ -124,7 +121,7 @@ function buildNameInputs() {
     const input = document.createElement("input");
     input.setAttribute("data-user-name", "1");
     input.placeholder = `Nome utente ${i + 1}`;
-    if (existing[i]) input.value = existing[i]; // mantiene ciò che avevi già scritto
+    if (existing[i]) input.value = existing[i];
     namesWrap.appendChild(input);
   }
 }
@@ -168,17 +165,21 @@ function setAllParticipants(checked) {
 
 function renderPaidByOptions() {
   paidBySelect.innerHTML = "";
+
+  // placeholder “Chi ha pagato?”
+  const ph = document.createElement("option");
+  ph.value = "";
+  ph.textContent = "Chi ha pagato?";
+  ph.disabled = true;
+  ph.selected = true;
+  paidBySelect.appendChild(ph);
+
   for (const u of roomUsers) {
     const opt = document.createElement("option");
     opt.value = u.id;
-    opt.textContent = u.name; // solo nome (più pulito)
+    opt.textContent = u.name;
     paidBySelect.appendChild(opt);
   }
-}
-
-function showHideParticipantsBox() {
-  const show = splitSomeRadio && splitSomeRadio.checked;
-  participantsBox.style.display = show ? "block" : "none";
 }
 
 /* ---------------- Accounting ---------------- */
@@ -258,8 +259,7 @@ function renderSaldo() {
     return;
   }
 
-  const balances = computeNetBalances();
-  const transfers = settleDebts(balances);
+  const transfers = settleDebts(computeNetBalances());
 
   if (!transfers.length) {
     saldoDiv.innerHTML = `<div class="muted">Siete pari. Nessuno deve nulla a nessuno.</div>`;
@@ -293,9 +293,7 @@ function renderExpensesList() {
     const participants = Array.isArray(e.participantIds) ? e.participantIds : [];
     const note = e.note && e.note.trim() ? ` — ${e.note}` : "";
 
-    let tag = "";
-    if (participants.length === roomUsers.length) tag = " — (tutti)";
-    else tag = ` — (tra: ${participants.map(userName).join(", ")})`;
+    const tag = ` — (tra: ${participants.map(userName).join(", ")})`;
 
     const li = document.createElement("li");
     li.textContent = `${payerName} ha pagato ${euro(amount)}${tag}${note}`;
@@ -383,9 +381,16 @@ async function enterRoom(id) {
       const data = snap.data() || {};
       roomUsers = Array.isArray(data.users) ? data.users : [];
 
+      // Niente nomi “fissi”: se manca tutto, due placeholder generici
+      if (!roomUsers.length) {
+        roomUsers = [
+          { id: "u1", name: "Utente 1" },
+          { id: "u2", name: "Utente 2" },
+        ];
+      }
+
       renderPaidByOptions();
       renderParticipantsChecklist();
-      showHideParticipantsBox();
 
       setStatus("");
       render();
@@ -431,7 +436,7 @@ async function addExpense() {
 
   const amount = parseAmount(amountInput.value);
   if (!Number.isFinite(amount) || amount <= 0) {
-    alert("Inserisci un importo valido (es. 20 o 20,50)");
+    alert("Inserisci un importo valido.");
     return;
   }
 
@@ -447,15 +452,9 @@ async function addExpense() {
     return;
   }
 
-  let participantIds;
-  if (splitAllRadio && splitAllRadio.checked) {
-    participantIds = roomUsers.map((u) => u.id);
-  } else {
-    participantIds = getCheckedParticipants();
-  }
-
-  if (!participantIds || participantIds.length === 0) {
-    alert("Se scegli 'Seleziona partecipanti', devi selezionarne almeno uno.");
+  const participantIds = getCheckedParticipants();
+  if (!participantIds.length) {
+    alert("Seleziona almeno un partecipante.");
     return;
   }
 
@@ -467,21 +466,16 @@ async function addExpense() {
     createdAt: serverTimestamp(),
   });
 
-  // Reset form come richiesto
+  // Reset richiesto: chiude/resettare "dividi tra"
+  // (qui la lista resta visibile, ma la resettiamo)
   amountInput.value = "";
   noteInput.value = "";
-
-  splitAllRadio.checked = true;
-  splitSomeRadio.checked = false;
   setAllParticipants(false);
-  showHideParticipantsBox();
+  renderPaidByOptions(); // torna al placeholder "Chi ha pagato?"
 }
 
 /* ---------------- Events ---------------- */
 userCountSelect?.addEventListener("change", buildNameInputs);
-
-splitAllRadio?.addEventListener("change", showHideParticipantsBox);
-splitSomeRadio?.addEventListener("change", showHideParticipantsBox);
 
 selectAllBtn?.addEventListener("click", () => setAllParticipants(true));
 selectNoneBtn?.addEventListener("click", () => setAllParticipants(false));
@@ -544,7 +538,6 @@ window.addEventListener("hashchange", () => {
 (function boot() {
   setStatus("Accesso…");
   buildNameInputs();
-  showHideParticipantsBox();
 
   ensureAuth()
     .then(() => {
@@ -560,3 +553,4 @@ window.addEventListener("hashchange", () => {
       render();
     });
 })();
+
