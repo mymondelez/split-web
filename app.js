@@ -61,9 +61,6 @@ const participantsWrap = document.getElementById("participantsWrap");
 const selectAllBtn = document.getElementById("selectAll");
 const selectNoneBtn = document.getElementById("selectNone");
 
-const finishBtn = document.getElementById("finishSplit");
-const finishResult = document.getElementById("finishResult");
-
 const emptyDiv = document.getElementById("empty");
 const list = document.getElementById("list");
 
@@ -85,7 +82,6 @@ function euro(n) {
 }
 
 function parseAmount(input) {
-  // accetta "20,50" e "20.50"
   const s = String(input ?? "").trim().replace(/\s/g, "").replace(",", ".");
   const n = Number(s);
   return Number.isFinite(n) ? n : NaN;
@@ -119,8 +115,8 @@ function cleanupSubs() {
 /* ---------------- UI builders ---------------- */
 function buildNameInputs() {
   if (!namesWrap) return;
-  const n = Number(userCountSelect?.value || 2);
 
+  const n = Number(userCountSelect?.value || 2);
   const existing = Array.from(namesWrap.querySelectorAll("input[data-user-name]")).map((i) => i.value);
 
   namesWrap.innerHTML = "";
@@ -128,10 +124,7 @@ function buildNameInputs() {
     const input = document.createElement("input");
     input.setAttribute("data-user-name", "1");
     input.placeholder = `Nome utente ${i + 1}`;
-    // default carini: primi due
-    if (existing[i]) input.value = existing[i];
-    else if (i === 0) input.value = "Simon Simon";
-    else if (i === 1) input.value = "Lulù";
+    if (existing[i]) input.value = existing[i]; // mantiene ciò che avevi già scritto
     namesWrap.appendChild(input);
   }
 }
@@ -159,7 +152,6 @@ function renderParticipantsChecklist() {
 
     label.appendChild(cb);
     label.appendChild(span);
-
     participantsWrap.appendChild(label);
   }
 }
@@ -179,21 +171,18 @@ function renderPaidByOptions() {
   for (const u of roomUsers) {
     const opt = document.createElement("option");
     opt.value = u.id;
-    opt.textContent = `${u.name} ha pagato`;
+    opt.textContent = u.name; // solo nome (più pulito)
     paidBySelect.appendChild(opt);
   }
 }
 
 function showHideParticipantsBox() {
-  if (!participantsBox) return;
   const show = splitSomeRadio && splitSomeRadio.checked;
   participantsBox.style.display = show ? "block" : "none";
 }
 
 /* ---------------- Accounting ---------------- */
 function computeNetBalances() {
-  // balance > 0 => deve ricevere
-  // balance < 0 => deve pagare
   const bal = {};
   for (const u of roomUsers) bal[u.id] = 0;
 
@@ -201,30 +190,17 @@ function computeNetBalances() {
     const amount = Number(e.amount || 0);
     if (!Number.isFinite(amount) || amount <= 0) continue;
 
-    // Nuovo formato
-    let payerId = e.payerId;
-    let participants = Array.isArray(e.participantIds) ? e.participantIds.slice() : null;
-
-    // Compatibilità vecchie spese (2 utenti)
-    if (!payerId && e.paidBy && roomUsers.length >= 2) {
-      payerId = e.paidBy === "SIMON" ? roomUsers[0].id : roomUsers[1].id;
-    }
-    if (!participants && e.forWhom && roomUsers.length >= 2) {
-      if (e.forWhom === "BOTH") participants = roomUsers.map((u) => u.id);
-      else if (e.forWhom === "SIMON") participants = [roomUsers[0].id];
-      else if (e.forWhom === "LULU") participants = [roomUsers[1].id];
-    }
+    const payerId = e.payerId;
+    const participants = Array.isArray(e.participantIds) ? e.participantIds.slice() : [];
 
     if (!payerId) continue;
-    if (!participants || participants.length === 0) continue;
+    if (!participants.length) continue;
 
     const share = amount / participants.length;
 
     for (const pid of participants) {
-      if (!(pid in bal)) bal[pid] = 0;
-      bal[pid] -= share;
-      if (!(payerId in bal)) bal[payerId] = 0;
-      bal[payerId] += share;
+      bal[pid] = (bal[pid] ?? 0) - share;
+      bal[payerId] = (bal[payerId] ?? 0) + share;
     }
   }
 
@@ -240,7 +216,6 @@ function settleDebts(balances, epsilon = 0.005) {
     else if (v < -epsilon) debtors.push({ uid, amt: -v });
   }
 
-  // ordinamento: più grandi prima
   creditors.sort((a, b) => b.amt - a.amt);
   debtors.sort((a, b) => b.amt - a.amt);
 
@@ -270,29 +245,37 @@ function userName(id) {
 }
 
 /* ---------------- Rendering ---------------- */
-function renderSummaryBalance() {
+function renderSaldo() {
   if (!saldoDiv) return;
+
   if (!roomUsers.length) {
     saldoDiv.textContent = "—";
     return;
   }
-  if (expenses.length === 0) {
-    saldoDiv.textContent = "—";
+
+  if (!expenses.length) {
+    saldoDiv.innerHTML = `<div class="muted">Nessuna spesa.</div>`;
     return;
   }
 
-  const bal = computeNetBalances();
-  const arr = Object.entries(bal).map(([uid, v]) => ({ uid, v }));
-  arr.sort((a, b) => b.v - a.v);
+  const balances = computeNetBalances();
+  const transfers = settleDebts(balances);
 
-  // mostra 3 righe max
-  const lines = arr.slice(0, 3).map((x) => {
-    const sign = x.v >= 0 ? "+" : "−";
-    return `${userName(x.uid)} ${sign}${euro(Math.abs(x.v))}`;
-  });
+  if (!transfers.length) {
+    saldoDiv.innerHTML = `<div class="muted">Siete pari. Nessuno deve nulla a nessuno.</div>`;
+    return;
+  }
 
-  const more = arr.length > 3 ? ` … (+${arr.length - 3})` : "";
-  saldoDiv.textContent = lines.join(" | ") + more;
+  const lines = transfers.map((t) => {
+    return `<div style="padding:8px 0;border-bottom:1px solid #2a2a2a">
+      <b>${userName(t.from)}</b> → <b>${userName(t.to)}</b>: <b>${euro(t.amount)}</b>
+    </div>`;
+  }).join("");
+
+  saldoDiv.innerHTML = `
+    <div class="muted" style="margin-bottom:8px">Pagamenti consigliati:</div>
+    ${lines}
+  `;
 }
 
 function renderExpensesList() {
@@ -306,24 +289,13 @@ function renderExpensesList() {
 
   for (const e of expenses) {
     const amount = Number(e.amount || 0);
-    const payerId = e.payerId || (e.paidBy && roomUsers.length >= 2 ? (e.paidBy === "SIMON" ? roomUsers[0].id : roomUsers[1].id) : null);
-    const participants = Array.isArray(e.participantIds)
-      ? e.participantIds
-      : (e.forWhom ? (
-          e.forWhom === "BOTH" ? roomUsers.map(u => u.id)
-          : e.forWhom === "SIMON" ? [roomUsers[0]?.id]
-          : e.forWhom === "LULU" ? [roomUsers[1]?.id]
-          : []
-        ) : []);
-
-    const payerName = payerId ? userName(payerId) : "Qualcuno";
+    const payerName = e.payerId ? userName(e.payerId) : "Qualcuno";
+    const participants = Array.isArray(e.participantIds) ? e.participantIds : [];
     const note = e.note && e.note.trim() ? ` — ${e.note}` : "";
 
     let tag = "";
-    if (participants && participants.length) {
-      if (participants.length === roomUsers.length) tag = " — (tutti)";
-      else tag = ` — (tra: ${participants.map(userName).join(", ")})`;
-    }
+    if (participants.length === roomUsers.length) tag = " — (tutti)";
+    else tag = ` — (tra: ${participants.map(userName).join(", ")})`;
 
     const li = document.createElement("li");
     li.textContent = `${payerName} ha pagato ${euro(amount)}${tag}${note}`;
@@ -359,7 +331,7 @@ function render() {
   inRoom.style.display = "block";
 
   renderShareLink();
-  renderSummaryBalance();
+  renderSaldo();
   renderExpensesList();
 }
 
@@ -373,16 +345,11 @@ async function createRoomFromSetup() {
   const inputs = Array.from(namesWrap.querySelectorAll("input[data-user-name]"));
   const names = inputs.map((i) => (i.value || "").trim()).slice(0, count);
 
-  if (names.length !== count) {
-    alert("Inserisci tutti i nomi.");
-    return;
-  }
-  if (names.some((n) => !n)) {
+  if (names.length !== count || names.some((n) => !n)) {
     alert("Inserisci tutti i nomi (non vuoti).");
     return;
   }
 
-  // ids stabili u1..u10
   const users = names.map((name, idx) => ({ id: `u${idx + 1}`, name }));
 
   const id = roomCode();
@@ -399,31 +366,22 @@ async function createRoomFromSetup() {
 async function enterRoom(id) {
   cleanupSubs();
   roomId = id;
-  setStatus("Caricamento stanza…");
+  setStatus("Caricamento $plit…");
 
   const roomRef = doc(db, "rooms", roomId);
 
   unsubRoom = onSnapshot(
     roomRef,
-    async (snap) => {
+    (snap) => {
       if (!snap.exists()) {
-        // stanza legacy? (prima versione non aveva users)
-        setStatus("Stanza non valida o mancante.");
-        alert("Stanza non trovata o non valida.");
+        setStatus("$plit non trovato.");
+        alert("$plit non trovato.");
         leaveRoom();
         return;
       }
 
       const data = snap.data() || {};
       roomUsers = Array.isArray(data.users) ? data.users : [];
-
-      // Se roomUsers è vuoto, prova una stanza vecchia: fallback 2 utenti
-      if (!roomUsers.length) {
-        roomUsers = [
-          { id: "u1", name: "Simon Simon" },
-          { id: "u2", name: "Lulù" },
-        ];
-      }
 
       renderPaidByOptions();
       renderParticipantsChecklist();
@@ -434,7 +392,7 @@ async function enterRoom(id) {
     },
     (err) => {
       console.error(err);
-      setStatus("Errore lettura stanza.");
+      setStatus("Errore lettura $plit.");
       render();
     }
   );
@@ -462,8 +420,6 @@ function leaveRoom() {
   roomUsers = [];
   expenses = [];
   window.location.hash = "";
-  finishResult.style.display = "none";
-  finishResult.innerHTML = "";
   setStatus("");
   render();
 }
@@ -471,11 +427,17 @@ function leaveRoom() {
 /* ---------------- Actions ---------------- */
 async function addExpense() {
   if (!roomId) return;
-  if (!roomUsers.length) return alert("Nessun utente in stanza.");
+  if (!roomUsers.length) return alert("Nessun utente nel $plit.");
 
   const amount = parseAmount(amountInput.value);
   if (!Number.isFinite(amount) || amount <= 0) {
     alert("Inserisci un importo valido (es. 20 o 20,50)");
+    return;
+  }
+
+  const note = (noteInput.value || "").trim();
+  if (!note) {
+    alert("Inserisci la causale (obbligatoria).");
     return;
   }
 
@@ -501,40 +463,18 @@ async function addExpense() {
     amount: Math.round(amount * 100) / 100,
     payerId,
     participantIds,
-    note: (noteInput.value || "").trim(),
+    note,
     createdAt: serverTimestamp(),
   });
 
+  // Reset form come richiesto
   amountInput.value = "";
   noteInput.value = "";
-  // non tocchiamo splitMode, così rimane comodo
-}
 
-function showFinishSplit() {
-  if (!roomUsers.length) return;
-
-  const balances = computeNetBalances();
-  const transfers = settleDebts(balances);
-
-  finishResult.style.display = "block";
-
-  // Se non ci sono trasferimenti
-  if (!transfers.length) {
-    finishResult.innerHTML = `<div class="muted">Siete pari. Nessuno deve nulla a nessuno.</div>`;
-    return;
-  }
-
-  // render lista pagamenti finali
-  const lines = transfers.map((t) => {
-    return `<div style="padding:8px 0;border-bottom:1px solid #2a2a2a">
-      <b>${userName(t.from)}</b> deve a <b>${userName(t.to)}</b>: <b>${euro(t.amount)}</b>
-    </div>`;
-  }).join("");
-
-  finishResult.innerHTML = `
-    <div class="muted" style="margin-bottom:8px">Pagamenti consigliati per chiudere tutto:</div>
-    ${lines}
-  `;
+  splitAllRadio.checked = true;
+  splitSomeRadio.checked = false;
+  setAllParticipants(false);
+  showHideParticipantsBox();
 }
 
 /* ---------------- Events ---------------- */
@@ -547,7 +487,7 @@ selectAllBtn?.addEventListener("click", () => setAllParticipants(true));
 selectNoneBtn?.addEventListener("click", () => setAllParticipants(false));
 
 createBtn?.addEventListener("click", () => {
-  setStatus("Creazione stanza…");
+  setStatus("Creazione $plit…");
   createRoomFromSetup().catch((e) => {
     console.error(e);
     alert(e?.message || e);
@@ -557,15 +497,14 @@ createBtn?.addEventListener("click", () => {
 
 joinBtn?.addEventListener("click", async () => {
   const id = getRoomFromHashOrText(joinInput.value);
-  if (!id) return alert("Incolla un link valido o un codice stanza.");
+  if (!id) return alert("Incolla un link valido o un codice $plit.");
   setHashRoom(id);
 
-  // controllo veloce esistenza stanza
   setStatus("Entrando…");
   try {
     const snap = await getDoc(doc(db, "rooms", id));
     if (!snap.exists()) {
-      alert("Stanza non trovata.");
+      alert("$plit non trovato.");
       setStatus("");
       return;
     }
@@ -595,8 +534,6 @@ addExpenseBtn?.addEventListener("click", () => {
     alert(e?.message || e);
   });
 });
-
-finishBtn?.addEventListener("click", showFinishSplit);
 
 window.addEventListener("hashchange", () => {
   const id = getRoomFromHashOrText();
