@@ -181,7 +181,7 @@ function setAllParticipants(checked) {
 function renderPaidByOptions() {
   paidBySelect.innerHTML = "";
 
-  // placeholder “Chi ha pagato?”
+  // placeholder “Chi ha pagato?” (grigio via class CSS is-placeholder)
   const ph = document.createElement("option");
   ph.value = "";
   ph.textContent = "Chi ha pagato?";
@@ -195,6 +195,8 @@ function renderPaidByOptions() {
     opt.textContent = u.name;
     paidBySelect.appendChild(opt);
   }
+
+  paidBySelect.classList.add("is-placeholder");
 }
 
 /* ---------------- Accounting ---------------- */
@@ -308,7 +310,7 @@ function renderExpensesList() {
     const participants = Array.isArray(e.participantIds) ? e.participantIds : [];
     const note = e.note && e.note.trim() ? ` — ${e.note}` : "";
 
-    const tag = ` — (Per: ${participants.map(userName).join(", ")})`;
+    const tag = ` — (tra: ${participants.map(userName).join(", ")})`;
 
     const li = document.createElement("li");
     li.textContent = `${payerName} ha pagato ${euro(amount)}${tag}${note}`;
@@ -477,10 +479,10 @@ async function addExpense() {
     payerId,
     participantIds,
     note,
-    createdAt: serverTimestamp(),
+    createdAt: serverTimestamp,
   });
 
-  // Reset + chiudi box (come richiesto)
+  // Reset + chiudi box
   amountInput.value = "";
   noteInput.value = "";
   setAllParticipants(false);
@@ -490,6 +492,10 @@ async function addExpense() {
 
 /* ---------------- Events ---------------- */
 userCountSelect?.addEventListener("change", buildNameInputs);
+
+paidBySelect?.addEventListener("change", () => {
+  if (paidBySelect.value) paidBySelect.classList.remove("is-placeholder");
+});
 
 toggleParticipantsBtn?.addEventListener("click", () => toggleParticipantsBox());
 
