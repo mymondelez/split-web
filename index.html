@@ -16,7 +16,6 @@
       --muted:#b3b3b3;
       --green:#1DB954;
       --green2:#1ed760;
-      --danger:#ff5c5c;
     }
 
     *{box-sizing:border-box}
@@ -106,8 +105,6 @@
       background:#0f0f0f;
     }
     .check input{width:auto}
-    .radio{display:flex;gap:10px;align-items:center;margin:6px 0}
-    .radio input{width:auto}
 
     .resultBox{
       border:1px solid var(--border);
@@ -198,7 +195,7 @@
           <h3 style="margin:0 0 10px">Aggiungi spesa</h3>
 
           <div class="row">
-            <input id="amount" type="text" inputmode="decimal" placeholder="Importo € (es: 20 o 20,50)" />
+            <input id="amount" type="text" inputmode="decimal" placeholder="Importo €" />
             <select id="paidBy"></select>
           </div>
 
@@ -210,18 +207,9 @@
 
           <div class="muted" style="margin-bottom:6px">Imputata a:</div>
 
-          <label class="radio">
-            <input type="radio" name="splitMode" id="splitAll" value="ALL" checked>
-            <span>Tutti (divide in parti uguali)</span>
-          </label>
-
-          <label class="radio">
-            <input type="radio" name="splitMode" id="splitSome" value="SOME">
-            <span>Seleziona partecipanti</span>
-          </label>
-
-          <div id="participantsBox" class="resultBox" style="margin-top:10px; display:none">
-            <div class="muted" style="margin-bottom:8px">Dividi tra:</div>
+          <!-- SOLO selezione multipla partecipanti -->
+          <div id="participantsBox" class="resultBox">
+            <div class="muted" style="margin-bottom:8px">Seleziona partecipanti:</div>
 
             <div id="participantsWrap" class="checklist">
               <div class="muted">Caricamento utenti…</div>
@@ -231,6 +219,10 @@
             <div class="row">
               <button class="secondary" id="selectAll" type="button">Seleziona tutti</button>
               <button class="secondary" id="selectNone" type="button">Deseleziona tutti</button>
+            </div>
+
+            <div class="muted" style="margin-top:10px">
+              Nota: chi ha pagato non è incluso automaticamente. Se vuoi selezionalo qui.
             </div>
           </div>
 
@@ -258,7 +250,7 @@
 
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=3");
+      navigator.serviceWorker.register("./sw.js?v=4");
     }
   </script>
 </body>
