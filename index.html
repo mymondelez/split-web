@@ -8,24 +8,89 @@
   <link rel="manifest" href="./manifest.webmanifest">
 
 
-  <style>
-    body{font-family:system-ui;margin:0;background:#f6f7fb;color:#111}
-    .wrap{max-width:900px;margin:24px auto;padding:0 16px}
-    .card{background:#fff;border:1px solid #e6e6ef;border-radius:14px;padding:16px;margin:12px 0}
-    input,select,button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #d5d5e3;box-sizing:border-box;font-size:16px;}
+<style>
+  :root{
+    --bg:#121212;
+    --panel:#181818;
+    --panel2:#1f1f1f;
+    --border:#2a2a2a;
+    --text:#ffffff;
+    --muted:#b3b3b3;
+    --green:#1DB954;
+    --green2:#1ed760;
+  }
 
-    button{border:none;background:#2b5cff;color:#fff;font-weight:700;cursor:pointer}
-    button.secondary{background:#eef1ff;color:#2b5cff;border:1px solid #cfd7ff}
-    .grid{display:grid;gap:12px}
-    @media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
-    .muted{color:#666;font-size:12px}
-    ul{margin:0;padding-left:18px}
-    li{margin:6px 0;cursor:pointer}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .saldo{font-size:18px;font-weight:800}
-    a{word-break:break-all}
-    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f0f2f8;font-size:12px}
-  </style>
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;background:var(--bg);color:var(--text)}
+  .wrap{max-width:980px;margin:18px auto;padding:0 14px}
+
+  .card{
+    background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px;
+    margin:12px 0;
+    box-shadow:0 8px 22px rgba(0,0,0,.25);
+  }
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img{width:28px;height:28px;border-radius:6px}
+  .brand .name{font-weight:900;letter-spacing:.5px;font-size:24px}
+  .subtitle{color:var(--muted);font-size:12px;margin-top:4px}
+  .status{color:var(--muted);font-size:12px;text-align:right}
+
+  input,select,button{
+    width:100%;
+    padding:12px 12px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#0f0f0f;
+    color:var(--text);
+    font-size:16px;
+    outline:none;
+  }
+  input::placeholder{color:#7a7a7a}
+
+  select{appearance:none}
+  button{
+    border:none;
+    background:var(--green);
+    color:#0b0b0b;
+    font-weight:900;
+    cursor:pointer;
+  }
+  button:hover{background:var(--green2)}
+  button.secondary{
+    background:transparent;
+    color:var(--text);
+    border:1px solid #3a3a3a;
+  }
+  button.secondary:hover{border-color:#5a5a5a}
+
+  .grid{display:grid;gap:12px}
+  @media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
+
+  .muted{color:var(--muted);font-size:12px}
+  ul{margin:0;padding-left:18px}
+  li{margin:10px 0;cursor:pointer}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .saldo{font-size:18px;font-weight:900}
+
+  a{word-break:break-all;color:var(--green2);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  .pill{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:999px;
+    background:#0f0f0f;
+    border:1px solid var(--border);
+    color:var(--muted);
+    font-size:12px
+  }
+</style>
+
 </head>
 
 <body>
