@@ -1,4 +1,4 @@
-const CACHE = "split2-v2"; // <-- cambia versione (prima era v1)
+const CACHE = "split2-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -23,7 +23,31 @@ self.addEventListener("activate", (event) => {
   })());
 });
 
+// Network-first per index/app (così non resta mai bloccato su versioni vecchie)
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+  const isCore =
+    event.request.mode === "navigate" ||
+    url.pathname.endsWith("/index.html") ||
+    url.pathname.endsWith("/app.js") ||
+    url.pathname.endsWith("/manifest.webmanifest");
+
+  if (isCore) {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(event.request, { cache: "no-store" });
+        const cache = await caches.open(CACHE);
+        cache.put(event.request, fresh.clone());
+        return fresh;
+      } catch {
+        const cached = await caches.match(event.request);
+        return cached || fetch(event.request);
+      }
+    })());
+    return;
+  }
+
+  // per il resto va bene cache-first
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
