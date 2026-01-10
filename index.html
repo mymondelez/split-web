@@ -188,7 +188,7 @@
       <div class="grid">
 
         <div class="card">
-          <h3 style="margin:0 0 10px">Saldo</h3>
+          <h3 style="margin:0 0 10px">Saldo $plit</h3>
           <div id="saldo" class="resultBox">—</div>
           <div class="muted" style="margin-top:10px">
             Suggerimento pagamenti per chiudere tutto (aggiornato live).
@@ -210,9 +210,13 @@
           <div style="height:14px"></div>
 
           <div class="muted" style="margin-bottom:6px">Imputata a:</div>
+<button class="secondary" id="toggleParticipants" type="button">Seleziona partecipanti</button>
 
-          <!-- SOLO selezione multipla partecipanti -->
-          <div id="participantsBox" class="resultBox">
+<div style="height:10px"></div>
+
+<!-- selezione multipla partecipanti (chiusa di default) -->
+<div id="participantsBox" class="resultBox" style="display:none">
+
             <div class="muted" style="margin-bottom:8px">Seleziona partecipanti:</div>
 
             <div id="participantsWrap" class="checklist">
