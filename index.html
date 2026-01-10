@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>$PLIT</title>
+  <title>$SPLT</title>
   <link rel="manifest" href="./manifest.webmanifest">
 
   <style>
@@ -71,14 +71,6 @@
       border:1px solid #3a3a3a;
     }
     button.secondary:hover{border-color:#5a5a5a}
-    button.danger{
-      background:transparent;
-      color:var(--danger);
-      border:1px solid rgba(255,92,92,.5);
-    }
-    button.danger:hover{
-      border-color:rgba(255,92,92,.9);
-    }
 
     .grid{display:grid;gap:12px}
     @media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
@@ -87,7 +79,6 @@
     ul{margin:0;padding-left:18px}
     li{margin:10px 0;cursor:pointer}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .saldo{font-size:18px;font-weight:900}
 
     a{word-break:break-all;color:var(--green2);text-decoration:none}
     a:hover{text-decoration:underline}
@@ -104,10 +95,7 @@
 
     .divider{height:1px;background:var(--border);margin:12px 0}
 
-    .checklist{
-      display:grid;
-      gap:10px;
-    }
+    .checklist{display:grid;gap:10px}
     .check{
       display:flex;
       gap:10px;
@@ -118,12 +106,7 @@
       background:#0f0f0f;
     }
     .check input{width:auto}
-    .radio{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      margin:6px 0;
-    }
+    .radio{display:flex;gap:10px;align-items:center;margin:6px 0}
     .radio input{width:auto}
 
     .resultBox{
@@ -143,7 +126,7 @@
       <div>
         <div class="brand">
           <img src="./icon-192.png" alt="logo">
-          <div class="name">$PLIT</div>
+          <div class="name">$SPLT</div>
           <span class="pill">realtime</span>
         </div>
         <div class="subtitle">split spese • euro • sync live</div>
@@ -155,7 +138,7 @@
     <div id="noRoom" class="card" style="display:none">
       <h3 style="margin:0 0 10px">Crea uno $plit</h3>
 
-      <div class="muted" style="margin-bottom:8px">Quanti siete? (2–10)</div>
+      <div class="muted" style="margin-bottom:8px">Quanti utenti partecipano? (2–10)</div>
       <select id="userCount">
         <option value="2">2 utenti</option>
         <option value="3">3 utenti</option>
@@ -171,31 +154,29 @@
       <div style="height:10px"></div>
 
       <div class="muted" style="margin-bottom:8px">Nomi utenti</div>
-      <div id="namesWrap" class="checklist">
-        <!-- generato da app.js -->
-      </div>
+      <div id="namesWrap" class="checklist"></div>
 
       <div style="height:12px"></div>
 
-      <button id="createRoom">Crea $plit</button>
+      <button id="createRoom">Crea uno $plit</button>
 
       <div class="divider"></div>
 
-      <h3 style="margin:0 0 10px">Entra in una stanza</h3>
-      <input id="joinInput" placeholder="Incolla link o codice stanza" />
+      <h3 style="margin:0 0 10px">Entra in uno $plit</h3>
+      <input id="joinInput" placeholder="Incolla link o codice $plit" />
       <div style="height:10px"></div>
       <button class="secondary" id="joinRoom">Entra</button>
 
       <div class="muted" style="margin-top:10px">
-        Dopo “Crea $plit”, condividi il link agli altri.
+        Dopo “Crea uno $plit”, condividi il link agli altri.
       </div>
     </div>
 
-    <!-- In room -->
+    <!-- In $plit -->
     <div id="inRoom" style="display:none">
 
       <div class="card">
-        <div><b>Stanza:</b> <span id="roomIdText"></span> <span class="pill">condividi link</span></div>
+        <div><b>Codice $plit:</b> <span id="roomIdText"></span> <span class="pill">condividi link</span></div>
         <div class="muted" style="margin-top:6px">Link: <a id="shareLink" href="#"></a></div>
         <div style="margin-top:10px" class="row">
           <button class="secondary" id="copyLink" type="button">Copia link</button>
@@ -206,20 +187,10 @@
       <div class="grid">
 
         <div class="card">
-          <h3 style="margin:0 0 10px">Saldo (live)</h3>
-          <div id="saldo" class="saldo">—</div>
-          <div class="muted" style="margin-top:8px">
-            Questo è un saldo “riassunto”. Il dettaglio completo è in “Fine $PLIT”.
-          </div>
-
-          <div style="height:12px"></div>
-
-          <button id="finishSplit" class="secondary" type="button">Fine $PLIT</button>
-
-          <div style="height:10px"></div>
-
-          <div id="finishResult" class="resultBox" style="display:none">
-            <!-- generato da app.js -->
+          <h3 style="margin:0 0 10px">Saldo</h3>
+          <div id="saldo" class="resultBox">—</div>
+          <div class="muted" style="margin-top:10px">
+            Suggerimento pagamenti per chiudere tutto (aggiornato live).
           </div>
         </div>
 
@@ -228,14 +199,12 @@
 
           <div class="row">
             <input id="amount" type="text" inputmode="decimal" placeholder="Importo € (es: 20 o 20,50)" />
-            <select id="paidBy">
-              <!-- popolato da app.js -->
-            </select>
+            <select id="paidBy"></select>
           </div>
 
           <div style="height:10px"></div>
 
-          <input id="note" placeholder="Causale / nota (es: autostrada)" />
+          <input id="note" placeholder="Causale (obbligatoria)" />
 
           <div style="height:14px"></div>
 
@@ -262,10 +231,6 @@
             <div class="row">
               <button class="secondary" id="selectAll" type="button">Seleziona tutti</button>
               <button class="secondary" id="selectNone" type="button">Deseleziona tutti</button>
-            </div>
-
-            <div class="muted" style="margin-top:10px">
-              Nota: chi ha pagato non è incluso automaticamente. Se vuoi, selezionalo qui.
             </div>
           </div>
 
@@ -294,7 +259,6 @@
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js?v=3");
-
     }
   </script>
 </body>
