@@ -268,7 +268,8 @@ function renderSaldo() {
 
   const lines = transfers.map((t) => {
     return `<div style="padding:8px 0;border-bottom:1px solid #2a2a2a">
-      <b>${userName(t.from)}</b> → <b>${userName(t.to)}</b>: <b>${euro(t.amount)}</b>
+      <b>${userName(t.from)}</b> <span style="color:#ff5c5c;font-weight:900">deve a</span> <b>${userName(t.to)}</b>: <b>${euro(t.amount)}</b>
+
     </div>`;
   }).join("");
 
