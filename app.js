@@ -5,14 +5,15 @@ import {
   doc,
   setDoc,
   addDoc,
+  deleteDoc,
   collection,
   onSnapshot,
   query,
   orderBy,
   serverTimestamp,
-  deleteDoc,
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
+// --- Firebase config (il tuo) ---
 const firebaseConfig = {
   apiKey: "AIzaSyBVD2lVIvsw8H1sKBDK3YPUYR0eB_6eC2Y",
   authDomain: "split-da653.firebaseapp.com",
@@ -30,7 +31,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// UI
+// --- UI refs ---
+const statusDiv = document.getElementById("status");
+
 const noRoom = document.getElementById("noRoom");
 const inRoom = document.getElementById("inRoom");
 
@@ -47,22 +50,24 @@ const saldoDiv = document.getElementById("saldo");
 const amountInput = document.getElementById("amount");
 const paidBySelect = document.getElementById("paidBy");
 const forWhomSelect = document.getElementById("forWhom");
-
 const noteInput = document.getElementById("note");
 const addExpenseBtn = document.getElementById("addExpense");
 
 const emptyDiv = document.getElementById("empty");
 const list = document.getElementById("list");
 
+// --- State ---
 let roomId = null;
 let unsubExpenses = null;
 let expenses = [];
 
+// --- Helpers ---
+function setStatus(msg) {
+  if (statusDiv) statusDiv.textContent = msg || "";
+}
+
 function euro(n) {
-  return new Intl.NumberFormat("it-IT", {
-    style: "currency",
-    currency: "EUR",
-  }).format(n);
+  return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n);
 }
 
 function roomCode(len = 10) {
@@ -83,6 +88,13 @@ function setHashRoom(id) {
   window.location.hash = `room=${id}`;
 }
 
+function parseAmount(input) {
+  // accetta "20,50" e "20.50"
+  const s = String(input ?? "").trim().replace(/\s/g, "").replace(",", ".");
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN;
+}
+
 function computeBalance() {
   // positivo => Lulù deve a Simon
   // negativo => Simon deve a Lulù
@@ -91,7 +103,7 @@ function computeBalance() {
   for (const e of expenses) {
     const amount = e.amount || 0;
     const paidBy = e.paidBy; // SIMON / LULU
-    const forWhom = e.forWhom || "BOTH"; // compatibilità con spese vecchie
+    const forWhom = e.forWhom || "BOTH"; // compatibilità vecchie spese
 
     if (forWhom === "BOTH") {
       const half = amount / 2;
@@ -109,13 +121,13 @@ function computeBalance() {
   return b;
 }
 
-
 function render() {
   if (!roomId) {
     noRoom.style.display = "block";
     inRoom.style.display = "none";
     return;
   }
+
   noRoom.style.display = "none";
   inRoom.style.display = "block";
 
@@ -144,29 +156,40 @@ function render() {
   emptyDiv.style.display = "none";
 
   for (const e of expenses) {
-const who = e.paidBy === "SIMON" ? USER_SIMON : USER_LULU;
-const note = e.note && e.note.trim() ? ` — ${e.note}` : "";
-const forWhom = e.forWhom || "BOTH";
-const tag =
-  forWhom === "BOTH" ? " — (50/50)" :
-  forWhom === "SIMON" ? ` — (solo ${USER_SIMON})` :
-  ` — (solo ${USER_LULU})`;
+    const who = e.paidBy === "SIMON" ? USER_SIMON : USER_LULU;
+    const note = e.note && e.note.trim() ? ` — ${e.note}` : "";
+    const forWhom = e.forWhom || "BOTH";
 
-const li = document.createElement("li");
-li.textContent = `${who} ha pagato ${euro(e.amount || 0)}${tag}${note}`;
+    const tag =
+      forWhom === "BOTH" ? " — (50/50)" :
+      forWhom === "SIMON" ? ` — (solo ${USER_SIMON})` :
+      ` — (solo ${USER_LULU})`;
 
+    const li = document.createElement("li");
+    li.textContent = `${who} ha pagato ${euro(e.amount || 0)}${tag}${note}`;
     li.title = "Clicca per eliminare questa spesa";
-    li.style.cursor = "pointer";
+
     li.addEventListener("click", async () => {
       if (!confirm("Eliminare questa spesa?")) return;
-      await deleteDoc(doc(db, "rooms", roomId, "expenses", e.id));
+      try {
+        await deleteDoc(doc(db, "rooms", roomId, "expenses", e.id));
+      } catch (err) {
+        alert("Errore eliminazione: " + (err?.message || err));
+      }
     });
+
     list.appendChild(li);
   }
 }
 
 async function ensureAuth() {
   if (!auth.currentUser) await signInAnonymously(auth);
+}
+
+function cleanupRoom() {
+  if (unsubExpenses) unsubExpenses();
+  unsubExpenses = null;
+  expenses = [];
 }
 
 async function createRoom() {
@@ -177,28 +200,30 @@ async function createRoom() {
 }
 
 function enterRoom(id) {
+  cleanupRoom();
   roomId = id;
 
-  if (unsubExpenses) unsubExpenses();
-  expenses = [];
-
-  const q = query(
-    collection(db, "rooms", roomId, "expenses"),
-    orderBy("createdAt", "desc")
+  const q = query(collection(db, "rooms", roomId, "expenses"), orderBy("createdAt", "desc"));
+  unsubExpenses = onSnapshot(
+    q,
+    (snap) => {
+      expenses = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setStatus("");
+      render();
+    },
+    (err) => {
+      console.error(err);
+      setStatus("Errore lettura dati. Controlla Firestore Rules.");
+      // resta comunque su UI, così almeno vedi che sei in room
+      render();
+    }
   );
-
-  unsubExpenses = onSnapshot(q, (snap) => {
-    expenses = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    render();
-  });
 
   render();
 }
 
 function leaveRoom() {
-  if (unsubExpenses) unsubExpenses();
-  unsubExpenses = null;
-  expenses = [];
+  cleanupRoom();
   roomId = null;
   window.location.hash = "";
   render();
@@ -212,21 +237,26 @@ async function joinRoom(id) {
 async function addExpense() {
   if (!roomId) return;
 
-  const n = Number(amountInput.value);
+  const n = parseAmount(amountInput.value);
   if (!Number.isFinite(n) || n <= 0) {
-    alert("Inserisci un importo valido (es. 12.50)");
+    alert("Inserisci un importo valido (es. 20 o 20,50)");
     return;
   }
 
-await addDoc(collection(db, "rooms", roomId, "expenses"), {
-  amount: Math.round(n * 100) / 100,
-  paidBy: paidBySelect.value,
-  forWhom: forWhomSelect.value, // ✅ nuovo
-  note: noteInput.value.trim(),
-  createdAt: serverTimestamp(),
-});
+  await addDoc(collection(db, "rooms", roomId, "expenses"), {
+    amount: Math.round(n * 100) / 100,
+    paidBy: paidBySelect.value,       // SIMON o LULU
+    forWhom: forWhomSelect.value,     // BOTH / SIMON / LULU
+    note: noteInput.value.trim(),     // causale/nota
+    createdAt: serverTimestamp(),
+  });
 
+  amountInput.value = "";
+  noteInput.value = "";
+  // lascio forWhom com’è, così puoi ripetere più inserimenti
+}
 
+// --- Events ---
 copyLinkBtn.addEventListener("click", async () => {
   const link = shareLinkA.href;
   try {
@@ -239,24 +269,53 @@ copyLinkBtn.addEventListener("click", async () => {
 
 leaveRoomBtn.addEventListener("click", leaveRoom);
 
-createBtn.addEventListener("click", () =>
-  createRoom().catch((e) => alert(e.message))
-);
+createBtn.addEventListener("click", () => {
+  setStatus("Creazione stanza…");
+  createRoom().catch((e) => {
+    console.error(e);
+    alert(e?.message || e);
+    setStatus("");
+  });
+});
 
 joinBtn.addEventListener("click", () => {
   const id = getRoomFromHashOrText(joinInput.value);
   if (!id) return alert("Incolla un link valido o un codice stanza.");
-  joinRoom(id).catch((e) => alert(e.message));
+  setStatus("Entrando nella stanza…");
+  joinRoom(id).catch((e) => {
+    console.error(e);
+    alert(e?.message || e);
+    setStatus("");
+  });
 });
 
-addExpenseBtn.addEventListener("click", () =>
-  addExpense().catch((e) => alert(e.message))
-);
+addExpenseBtn.addEventListener("click", () => {
+  addExpense().catch((e) => {
+    console.error(e);
+    alert(e?.message || e);
+  });
+});
 
-// Boot
-await ensureAuth();
+// Se cambia hash (#room=...), entra nella stanza
+window.addEventListener("hashchange", () => {
+  const id = getRoomFromHashOrText();
+  if (id) enterRoom(id);
+});
 
-const fromHash = getRoomFromHashOrText();
-if (fromHash) enterRoom(fromHash);
-
-render();
+// --- Boot (compatibile iPhone/WhatsApp) ---
+(function boot() {
+  setStatus("Accesso…");
+  ensureAuth()
+    .then(() => {
+      const fromHash = getRoomFromHashOrText();
+      if (fromHash) enterRoom(fromHash);
+      setStatus("");
+      render();
+    })
+    .catch((e) => {
+      console.error(e);
+      alert("Errore avvio app: " + (e?.message || e));
+      setStatus("Errore avvio app.");
+      render();
+    });
+})();
