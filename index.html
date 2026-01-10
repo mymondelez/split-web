@@ -4,32 +4,37 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Split 2 — Simon Simon / Lulù</title>
+
   <style>
     body{font-family:system-ui;margin:0;background:#f6f7fb;color:#111}
     .wrap{max-width:900px;margin:24px auto;padding:0 16px}
     .card{background:#fff;border:1px solid #e6e6ef;border-radius:14px;padding:16px;margin:12px 0}
-    input,select,button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #d5d5e3}
+    input,select,button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #d5d5e3;box-sizing:border-box}
     button{border:none;background:#2b5cff;color:#fff;font-weight:700;cursor:pointer}
     button.secondary{background:#eef1ff;color:#2b5cff;border:1px solid #cfd7ff}
     .grid{display:grid;gap:12px}
     @media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
     .muted{color:#666;font-size:12px}
     ul{margin:0;padding-left:18px}
-    li{margin:6px 0}
+    li{margin:6px 0;cursor:pointer}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .saldo{font-size:18px;font-weight:800}
     a{word-break:break-all}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f0f2f8;font-size:12px}
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="card">
       <h2 style="margin:0 0 6px">Split 2 — Simon Simon / Lulù</h2>
       <div class="muted">50/50 • sincronizzazione realtime • importi in euro</div>
+      <div id="status" class="muted" style="margin-top:8px">Caricamento…</div>
     </div>
 
     <div id="noRoom" class="card" style="display:none">
       <h3>Crea o entra</h3>
+
       <button id="createRoom">Crea stanza</button>
 
       <div style="height:14px"></div>
@@ -37,11 +42,15 @@
       <input id="joinInput" placeholder="Incolla link o codice stanza" />
       <div style="height:10px"></div>
       <button class="secondary" id="joinRoom">Entra</button>
+
+      <div class="muted" style="margin-top:10px">
+        Tip: dopo “Crea stanza”, condividi il link all’altro telefono.
+      </div>
     </div>
 
     <div id="inRoom" style="display:none">
       <div class="card">
-        <div><b>Codice stanza:</b> <span id="roomIdText"></span></div>
+        <div><b>Codice stanza:</b> <span id="roomIdText"></span> <span class="pill">condividi il link</span></div>
         <div class="muted" style="margin-top:6px">Link: <a id="shareLink" href="#"></a></div>
         <div style="margin-top:10px" class="row">
           <button class="secondary" id="copyLink">Copia link</button>
@@ -53,34 +62,41 @@
         <div class="card">
           <h3>Saldo</h3>
           <div id="saldo" class="saldo">—</div>
-          <div class="muted" style="margin-top:8px">Regola: ogni spesa si divide 50/50.</div>
+          <div class="muted" style="margin-top:8px">
+            Regola: “Imputata a Entrambi” = 50/50. “Solo uno” = non si divide.
+          </div>
         </div>
 
         <div class="card">
           <h3>Aggiungi spesa</h3>
+
           <div class="row">
-            <input id="amount" type="number" min="0" step="0.01" placeholder="Importo €" />
+            <input id="amount" type="text" inputmode="decimal" placeholder="Importo € (es: 20 o 20,50)" />
             <select id="paidBy">
               <option value="SIMON">Simon Simon ha pagato</option>
               <option value="LULU">Lulù ha pagato</option>
             </select>
           </div>
 
-<div style="height:10px"></div>
-<select id="forWhom">
-  <option value="BOTH">Imputata a: Entrambi (50/50)</option>
-  <option value="SIMON">Imputata a: Solo Simon Simon</option>
-  <option value="LULU">Imputata a: Solo Lulù</option>
-</select>
-
-
-
-          
           <div style="height:10px"></div>
+
+          <select id="forWhom">
+            <option value="BOTH">Imputata a: Entrambi (50/50)</option>
+            <option value="SIMON">Imputata a: Solo Simon Simon</option>
+            <option value="LULU">Imputata a: Solo Lulù</option>
+          </select>
+
+          <div style="height:10px"></div>
+
           <input id="note" placeholder="Causale / nota (es: autostrada)" />
+
           <div style="height:10px"></div>
+
           <button id="addExpense">Aggiungi</button>
-          <div class="muted" style="margin-top:8px">Per eliminare una spesa: cliccala nella lista.</div>
+
+          <div class="muted" style="margin-top:8px">
+            Per eliminare una spesa: cliccala nella lista.
+          </div>
         </div>
       </div>
 
@@ -92,7 +108,6 @@
     </div>
   </div>
 
-  <script type="module" src="./app.js?v=2"></script>
-
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
