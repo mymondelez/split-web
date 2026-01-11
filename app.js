@@ -73,7 +73,7 @@ const mySplitsList = document.getElementById("mySplitsList");
 
 /* ---------------- State ---------------- */
 let roomId = null;
-let roomUsers = []; // [{id,name}]
+let roomUsers = [];
 let expenses = [];
 
 let roomName = "";
@@ -118,7 +118,7 @@ function setHashRoom(id) {
   window.location.hash = `room=${id}`;
 }
 
-function cleanupSubs() {
+function cleanupRoomSubs() {
   if (unsubRoom) unsubRoom();
   if (unsubExpenses) unsubExpenses();
   unsubRoom = null;
@@ -131,22 +131,20 @@ function meUid() {
 
 /* ---------------- UI helpers ---------------- */
 function toggleParticipantsBox(force) {
-  if (!participantsBox) return;
+  if (!participantsBox || !toggleParticipantsBtn) return;
   const show =
     typeof force === "boolean"
       ? force
       : (participantsBox.style.display === "none" || participantsBox.style.display === "");
   participantsBox.style.display = show ? "block" : "none";
-  if (toggleParticipantsBtn) {
-    toggleParticipantsBtn.textContent = show ? "Nascondi partecipanti" : "Seleziona partecipanti";
-  }
+  toggleParticipantsBtn.textContent = show ? "Nascondi partecipanti" : "Seleziona partecipanti";
 }
 
 function buildNameInputs() {
-  if (!namesWrap) return;
+  if (!namesWrap || !userCountSelect) return;
+  const n = Number(userCountSelect.value || 2);
 
-  const n = Number(userCountSelect?.value || 2);
-  const existing = Array.from(namesWrap.querySelectorAll("input[data-user-name]")).map((i) => i.value);
+  const existing = Array.from(namesWrap.querySelectorAll("input[data-user-name]")).map(i => i.value);
 
   namesWrap.innerHTML = "";
   for (let i = 0; i < n; i++) {
@@ -188,19 +186,22 @@ function renderParticipantsChecklist() {
 }
 
 function getCheckedParticipants() {
+  if (!participantsWrap) return [];
   const cbs = Array.from(participantsWrap.querySelectorAll("input[data-participant]"));
-  return cbs.filter((c) => c.checked).map((c) => c.value);
+  return cbs.filter(c => c.checked).map(c => c.value);
 }
 
 function setAllParticipants(checked) {
+  if (!participantsWrap) return;
   const cbs = Array.from(participantsWrap.querySelectorAll("input[data-participant]"));
-  cbs.forEach((c) => (c.checked = checked));
+  cbs.forEach(c => (c.checked = checked));
 }
 
 function renderPaidByOptions() {
+  if (!paidBySelect) return;
+
   paidBySelect.innerHTML = "";
 
-  // placeholder “Chi ha pagato?” (grigio via class CSS is-placeholder)
   const ph = document.createElement("option");
   ph.value = "";
   ph.textContent = "Chi ha pagato?";
@@ -223,6 +224,10 @@ function isOwner() {
   return !!uid && !!ownerUid && uid === ownerUid;
 }
 
+function userName(id) {
+  return roomUsers.find(u => u.id === id)?.name || id;
+}
+
 /* ---------------- Accounting ---------------- */
 function computeNetBalances() {
   const bal = {};
@@ -234,18 +239,14 @@ function computeNetBalances() {
 
     const payerId = e.payerId;
     const participants = Array.isArray(e.participantIds) ? e.participantIds.slice() : [];
-
-    if (!payerId) continue;
-    if (!participants.length) continue;
+    if (!payerId || !participants.length) continue;
 
     const share = amount / participants.length;
-
     for (const pid of participants) {
       bal[pid] = (bal[pid] ?? 0) - share;
       bal[payerId] = (bal[payerId] ?? 0) + share;
     }
   }
-
   return bal;
 }
 
@@ -274,19 +275,26 @@ function settleDebts(balances, epsilon = 0.005) {
       d.amt -= pay;
       c.amt -= pay;
     }
-
     if (d.amt <= epsilon) i++;
     if (c.amt <= epsilon) j++;
   }
-
   return transfers;
 }
 
-function userName(id) {
-  return roomUsers.find((u) => u.id === id)?.name || id;
+/* ---------------- Rendering ---------------- */
+function renderShareLink() {
+  if (!roomIdText || !shareLinkA) return;
+  roomIdText.textContent = roomId;
+  const link = `${window.location.origin}${window.location.pathname}#room=${roomId}`;
+  shareLinkA.href = link;
+  shareLinkA.textContent = link;
 }
 
-/* ---------------- Rendering ---------------- */
+function renderRoomHeader() {
+  if (splitNameText) splitNameText.textContent = roomName || "—";
+  if (deleteSplitBtn) deleteSplitBtn.style.display = isOwner() ? "block" : "none";
+}
+
 function renderSaldo() {
   if (!saldoDiv) return;
 
@@ -294,35 +302,33 @@ function renderSaldo() {
     saldoDiv.textContent = "—";
     return;
   }
-
   if (!expenses.length) {
     saldoDiv.innerHTML = `<div class="muted">Nessuna spesa.</div>`;
     return;
   }
 
   const transfers = settleDebts(computeNetBalances());
-
   if (!transfers.length) {
     saldoDiv.innerHTML = `<div class="muted">Siete pari. Nessuno deve nulla a nessuno.</div>`;
     return;
   }
 
-  const lines = transfers.map((t) => {
-    return `<div style="padding:8px 0;border-bottom:1px solid #2a2a2a">
-      <b>${userName(t.from)}</b> <span style="color:#ff5c5c;font-weight:900">deve a</span> <b>${userName(t.to)}</b>: <b>${euro(t.amount)}</b>
-    </div>`;
-  }).join("");
+  const lines = transfers.map(t => `
+    <div style="padding:8px 0;border-bottom:1px solid #2a2a2a">
+      <b>${userName(t.from)}</b>
+      <span style="color:#ff5c5c;font-weight:900">deve a</span>
+      <b>${userName(t.to)}</b>: <b>${euro(t.amount)}</b>
+    </div>
+  `).join("");
 
-  saldoDiv.innerHTML = `
-    <div class="muted" style="margin-bottom:8px">Pagamenti consigliati:</div>
-    ${lines}
-  `;
+  saldoDiv.innerHTML = `<div class="muted" style="margin-bottom:8px">Pagamenti consigliati:</div>${lines}`;
 }
 
 function renderExpensesList() {
+  if (!list || !emptyDiv) return;
   list.innerHTML = "";
 
-  if (expenses.length === 0) {
+  if (!expenses.length) {
     emptyDiv.style.display = "block";
     return;
   }
@@ -330,13 +336,13 @@ function renderExpensesList() {
 
   for (const e of expenses) {
     const amount = Number(e.amount || 0);
-    const payerName = e.payerId ? userName(e.payerId) : "Qualcuno";
+    const payer = e.payerId ? userName(e.payerId) : "Qualcuno";
     const participants = Array.isArray(e.participantIds) ? e.participantIds : [];
-    const note = e.note && e.note.trim() ? ` — ${e.note}` : "";
+    const note = (e.note || "").trim() ? ` — ${e.note}` : "";
     const tag = ` — (tra: ${participants.map(userName).join(", ")})`;
 
     const li = document.createElement("li");
-    li.textContent = `${payerName} ha pagato ${euro(amount)}${tag}${note}`;
+    li.textContent = `${payer} ha pagato ${euro(amount)}${tag}${note}`;
     li.title = "Clicca per eliminare questa spesa";
 
     li.addEventListener("click", async () => {
@@ -352,26 +358,8 @@ function renderExpensesList() {
   }
 }
 
-function renderShareLink() {
-  roomIdText.textContent = roomId;
-  const link = `${window.location.origin}${window.location.pathname}#room=${roomId}`;
-  shareLinkA.href = link;
-  shareLinkA.textContent = link;
-}
-
-function renderRoomHeader() {
-  if (splitNameText) splitNameText.textContent = roomName || "—";
-  if (deleteSplitBtn) deleteSplitBtn.style.display = isOwner() ? "block" : "none";
-}
-
 function renderMySplits() {
   if (!mySplitsList) return;
-
-  // richiesta: elenco in fondo alla seconda pagina
-  if (!roomId) {
-    mySplitsList.innerHTML = "";
-    return;
-  }
 
   if (!mySplits.length) {
     mySplitsList.innerHTML = `<div class="muted">Nessuno $plit creato ancora.</div>`;
@@ -413,7 +401,7 @@ function renderMySplits() {
     delBtn.className = "danger";
     delBtn.addEventListener("click", async () => {
       if (!confirm(`Eliminare lo $plit “${s.name || s.roomId}”?`)) return;
-      await deleteSplitById(s.roomId, true);
+      await deleteSplitById(s.roomId);
     });
 
     actions.appendChild(openBtn);
@@ -426,10 +414,11 @@ function renderMySplits() {
   }
 }
 
-function render() {
+function renderPage() {
   if (!roomId) {
     noRoom.style.display = "block";
     inRoom.style.display = "none";
+    renderMySplits(); // IMPORTANT: lista in prima pagina
     return;
   }
   noRoom.style.display = "none";
@@ -439,14 +428,9 @@ function render() {
   renderRoomHeader();
   renderSaldo();
   renderExpensesList();
-  renderMySplits();
 }
 
-/* ---------------- Auth & MySplits index ---------------- */
-async function ensureAuth() {
-  if (!auth.currentUser) await signInAnonymously(auth);
-}
-
+/* ---------------- MySplits subscription ---------------- */
 function subscribeMySplits() {
   if (unsubMySplits) unsubMySplits();
   const uid = meUid();
@@ -456,13 +440,18 @@ function subscribeMySplits() {
   unsubMySplits = onSnapshot(
     q,
     (snap) => {
-      mySplits = snap.docs.map((d) => ({ roomId: d.id, ...(d.data() || {}) }));
+      mySplits = snap.docs.map(d => ({ roomId: d.id, ...(d.data() || {}) }));
       renderMySplits();
     },
     (err) => {
       console.error(err);
     }
   );
+}
+
+/* ---------------- Auth / Boot ---------------- */
+async function ensureAuth() {
+  if (!auth.currentUser) await signInAnonymously(auth);
 }
 
 /* ---------------- Room flow ---------------- */
@@ -478,9 +467,9 @@ async function createRoomFromSetup() {
 
   const count = Number(userCountSelect?.value || 2);
   const inputs = Array.from(namesWrap.querySelectorAll("input[data-user-name]"));
-  const names = inputs.map((i) => (i.value || "").trim()).slice(0, count);
+  const names = inputs.map(i => (i.value || "").trim()).slice(0, count);
 
-  if (names.length !== count || names.some((n) => !n)) {
+  if (names.length !== count || names.some(n => !n)) {
     alert("Inserisci tutti i nomi (non vuoti).");
     return;
   }
@@ -489,7 +478,7 @@ async function createRoomFromSetup() {
 
   const id = roomCode();
 
-  // room principale
+  // room
   await setDoc(doc(db, "rooms", id), {
     name: splitName,
     ownerUid: uid,
@@ -498,7 +487,7 @@ async function createRoomFromSetup() {
     updatedAt: serverTimestamp(),
   });
 
-  // indice “i miei split”
+  // indice "I miei split"
   await setDoc(doc(db, "users", uid, "splits", id), {
     name: splitName,
     createdAt: serverTimestamp(),
@@ -509,7 +498,7 @@ async function createRoomFromSetup() {
 }
 
 async function enterRoom(id) {
-  cleanupSubs();
+  cleanupRoomSubs();
   roomId = id;
   setStatus("Caricamento $plit…");
 
@@ -530,23 +519,16 @@ async function enterRoom(id) {
       roomName = data.name || "";
       ownerUid = data.ownerUid || "";
 
-      if (!roomUsers.length) {
-        roomUsers = [
-          { id: "u1", name: "Utente 1" },
-          { id: "u2", name: "Utente 2" },
-        ];
-      }
-
       renderPaidByOptions();
       renderParticipantsChecklist();
 
       setStatus("");
-      render();
+      renderPage();
     },
     (err) => {
       console.error(err);
       setStatus("Errore lettura $plit.");
-      render();
+      renderPage();
     }
   );
 
@@ -554,21 +536,21 @@ async function enterRoom(id) {
   unsubExpenses = onSnapshot(
     q,
     (snap) => {
-      expenses = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }));
-      render();
+      expenses = snap.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
+      renderPage();
     },
     (err) => {
       console.error(err);
       setStatus("Errore lettura spese.");
-      render();
+      renderPage();
     }
   );
 
-  render();
+  renderPage();
 }
 
 function leaveRoom() {
-  cleanupSubs();
+  cleanupRoomSubs();
   roomId = null;
   roomUsers = [];
   expenses = [];
@@ -576,20 +558,17 @@ function leaveRoom() {
   ownerUid = "";
   window.location.hash = "";
   setStatus("");
-  render();
+  renderPage();
 }
 
 /* ---------------- Delete Split ---------------- */
-async function deleteSplitById(id, fromList = false) {
+async function deleteSplitById(id) {
   const uid = meUid();
   if (!uid) return alert("Non autenticato.");
 
-  // Controllo owner lato client (la sicurezza vera la mettiamo nelle Rules)
   const roomSnap = await getDoc(doc(db, "rooms", id));
   if (!roomSnap.exists()) {
-    // pulisci indice se esiste
     try { await deleteDoc(doc(db, "users", uid, "splits", id)); } catch {}
-    if (!fromList) leaveRoom();
     return;
   }
 
@@ -602,17 +581,17 @@ async function deleteSplitById(id, fromList = false) {
 
   setStatus("Eliminazione $plit…");
 
-  // 1) elimina tutte le spese (best-effort)
+  // elimina spese
   try {
     const exSnap = await getDocs(collection(db, "rooms", id, "expenses"));
     for (const d of exSnap.docs) {
       await deleteDoc(doc(db, "rooms", id, "expenses", d.id));
     }
   } catch (e) {
-    console.warn("Non sono riuscito a cancellare tutte le spese:", e);
+    console.warn("Non riesco a cancellare tutte le spese:", e);
   }
 
-  // 2) elimina room
+  // elimina room
   try {
     await deleteDoc(doc(db, "rooms", id));
   } catch (e) {
@@ -621,39 +600,32 @@ async function deleteSplitById(id, fromList = false) {
     return;
   }
 
-  // 3) elimina indice “i miei split”
-  try {
-    await deleteDoc(doc(db, "users", uid, "splits", id));
-  } catch {}
+  // elimina indice
+  try { await deleteDoc(doc(db, "users", uid, "splits", id)); } catch {}
 
   setStatus("");
 
-  if (roomId === id) {
-    leaveRoom();
-  } else {
-    // refresh lista
-    renderMySplits();
-  }
+  // se eri dentro quello split
+  if (roomId === id) leaveRoom();
 }
 
-/* ---------------- Actions ---------------- */
+/* ---------------- Add Expense ---------------- */
 async function addExpense() {
   if (!roomId) return;
-  if (!roomUsers.length) return alert("Nessun utente nel $plit.");
 
-  const amount = parseAmount(amountInput.value);
+  const amount = parseAmount(amountInput?.value);
   if (!Number.isFinite(amount) || amount <= 0) {
     alert("Inserisci un importo valido.");
     return;
   }
 
-  const note = (noteInput.value || "").trim();
+  const note = (noteInput?.value || "").trim();
   if (!note) {
     alert("Inserisci la causale (obbligatoria).");
     return;
   }
 
-  const payerId = paidBySelect.value;
+  const payerId = paidBySelect?.value;
   if (!payerId) {
     alert("Seleziona chi ha pagato.");
     return;
@@ -674,10 +646,11 @@ async function addExpense() {
     createdBy: meUid(),
   });
 
-  // Reset + chiudi box
-  amountInput.value = "";
-  noteInput.value = "";
+  // reset + chiudi imputata a
+  if (amountInput) amountInput.value = "";
+  if (noteInput) noteInput.value = "";
   setAllParticipants(false);
+
   renderPaidByOptions();
   toggleParticipantsBox(false);
 }
@@ -704,11 +677,12 @@ createBtn?.addEventListener("click", () => {
 });
 
 joinBtn?.addEventListener("click", async () => {
-  const id = getRoomFromHashOrText(joinInput.value);
+  const id = getRoomFromHashOrText(joinInput?.value);
   if (!id) return alert("Incolla un link valido o un codice $plit.");
-  setHashRoom(id);
 
+  setHashRoom(id);
   setStatus("Entrando…");
+
   try {
     const snap = await getDoc(doc(db, "rooms", id));
     if (!snap.exists()) {
@@ -725,7 +699,9 @@ joinBtn?.addEventListener("click", async () => {
 });
 
 copyLinkBtn?.addEventListener("click", async () => {
-  const link = shareLinkA.href;
+  const link = shareLinkA?.href || "";
+  if (!link) return;
+
   try {
     await navigator.clipboard.writeText(link);
     alert("Link copiato ✅");
@@ -740,7 +716,7 @@ deleteSplitBtn?.addEventListener("click", async () => {
   if (!roomId) return;
   if (!isOwner()) return alert("Solo chi ha creato lo $plit può eliminarlo.");
   if (!confirm(`Eliminare lo $plit “${roomName || roomId}”?`)) return;
-  await deleteSplitById(roomId, false);
+  await deleteSplitById(roomId);
 });
 
 addExpenseBtn?.addEventListener("click", () => {
@@ -769,12 +745,12 @@ window.addEventListener("hashchange", () => {
       if (fromHash) enterRoom(fromHash);
 
       setStatus("");
-      render();
+      renderPage();
     })
     .catch((e) => {
       console.error(e);
       alert("Errore avvio app: " + (e?.message || e));
       setStatus("Errore avvio app.");
-      render();
+      renderPage();
     });
 })();
