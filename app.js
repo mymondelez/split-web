@@ -338,7 +338,9 @@ function renderExpensesList() {
     const amount = Number(e.amount || 0);
     const payer = e.payerId ? userName(e.payerId) : "Qualcuno";
     const participants = Array.isArray(e.participantIds) ? e.participantIds : [];
-    const note = (e.note || "").trim() ? ` — ${e.note}` : "";
+    
+    const note = (e.note || "").trim() ? ` — <span style="color: #ff5c5c; font-weight: 900;">${e.note}</span>` : "";
+    /*  const note = (e.note || "").trim() ? ` — ${e.note}` : ""; */
     const tag = ` (Per: ${participants.map(userName).join(", ")})`;
 
     const li = document.createElement("li");
