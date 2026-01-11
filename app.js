@@ -321,7 +321,7 @@ function renderSaldo() {
     </div>
   `).join("");
 
-  saldoDiv.innerHTML = `<div class="muted" style="margin-bottom:8px">Pagamenti consigliati:</div>${lines}`;
+  saldoDiv.innerHTML = `<div class="muted" style="margin-bottom:8px"></div>${lines}`;
 }
 
 function renderExpensesList() {
