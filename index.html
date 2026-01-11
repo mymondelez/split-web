@@ -2,265 +2,377 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>$plit</title>
-  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#121212" />
+  <title>$SPLT</title>
+
+  <link rel="icon" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
 
   <style>
     :root{
-      --bg:#121212;
-      --panel:#181818;
-      --panel2:#1f1f1f;
-      --border:#2a2a2a;
-      --text:#ffffff;
-      --muted:#b3b3b3;
-      --green:#1DB954;
-      --green2:#1ed760;
+      --bg:#0b0b0b;
+      --card:#121212;
+      --card2:#161616;
+      --line:#242424;
+      --txt:#f3f3f3;
+      --muted:#a7a7a7;
+      --muted2:#7a7a7a;
+      --green:#1ED760;
+      --red:#ff5c5c;
+      --shadow: 0 12px 36px rgba(0,0,0,.35);
+      --radius: 22px;
     }
-
     *{box-sizing:border-box}
     body{
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
       margin:0;
-      background:var(--bg);
-      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 10% 0%, rgba(30,215,96,.10), transparent 55%),
+                  radial-gradient(1200px 700px at 90% 0%, rgba(30,215,96,.06), transparent 50%),
+                  var(--bg);
+      color:var(--txt);
     }
-    .wrap{max-width:980px;margin:18px auto;padding:0 14px}
-
+    .wrap{
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 18px 14px 40px;
+    }
     .card{
-      background:linear-gradient(180deg,var(--panel),var(--panel2));
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:16px;
-      margin:12px 0;
-      box-shadow:0 8px 22px rgba(0,0,0,.25);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin: 14px 0;
     }
-
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .brand{display:flex;align-items:center;gap:10px}
-    .brand img{width:28px;height:28px;border-radius:6px}
-    .brand .name{font-weight:900;letter-spacing:.6px;font-size:24px}
-    .subtitle{color:var(--muted);font-size:12px;margin-top:4px}
-    .status{color:var(--muted);font-size:12px;text-align:right}
-
-    input,select,button{
-      width:100%;
-      padding:12px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
+    .topbar{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding: 14px 16px;
+    }
+    .logo{
+      width:38px;height:38px;border-radius: 10px;
+      border:1px solid rgba(255,255,255,.10);
       background:#0f0f0f;
-      color:var(--text);
-      font-size:16px;
-      outline:none;
     }
-    input::placeholder{color:#7a7a7a}
-    select{appearance:none}
-
-    button{
-      border:none;
-      background:var(--green);
+    .brand{
+      display:flex; flex-direction:column; gap:2px;
+      min-width:0;
+    }
+    .brand .name{
+      font-weight: 900;
+      letter-spacing: .10em;
+      font-size: 22px;
+      white-space: nowrap;
+    }
+    .pill{
+      margin-left: 10px;
+      display:inline-flex;
+      align-items:center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .sub{
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    h2{
+      margin:0 0 10px;
+      font-size: 26px;
+      letter-spacing: -0.02em;
+    }
+    .muted{ color: var(--muted); }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .col{ flex:1 1 280px; min-width: 260px; }
+    .field{
+      width:100%;
+      padding: 14px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.28);
+      color: var(--txt);
+      outline: none;
+      font-size: 18px;
+    }
+    .field::placeholder{ color: var(--muted2); }
+    select.field{
+      appearance:none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position:
+        calc(100% - 20px) calc(1em + 4px),
+        calc(100% - 15px) calc(1em + 4px);
+      background-size:5px 5px, 5px 5px;
+      background-repeat:no-repeat;
+    }
+    .btn{
+      width:100%;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(0,0,0,.2);
+      background: var(--green);
       color:#0b0b0b;
-      font-weight:900;
+      font-weight: 900;
+      font-size: 18px;
       cursor:pointer;
     }
-    button:hover{background:var(--green2)}
-    button.secondary{
-      background:transparent;
-      color:var(--text);
-      border:1px solid #3a3a3a;
+    .btn.secondary{
+      background: rgba(255,255,255,.06);
+      color: var(--txt);
+      border:1px solid var(--line);
     }
-    button.secondary:hover{border-color:#5a5a5a}
-
-    .grid{display:grid;gap:12px}
-    @media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
-
-    .muted{color:var(--muted);font-size:12px}
-    ul{margin:0;padding-left:18px}
-    li{margin:10px 0;cursor:pointer}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-
-    a{word-break:break-all;color:var(--green2);text-decoration:none}
-    a:hover{text-decoration:underline}
-
-    .pill{
-      display:inline-block;
-      padding:4px 10px;
-      border-radius:999px;
-      background:#0f0f0f;
-      border:1px solid var(--border);
-      color:var(--muted);
-      font-size:12px
+    .btn.danger{
+      background: rgba(255,92,92,.15);
+      color: var(--txt);
+      border: 1px solid rgba(255,92,92,.35);
     }
-
-    .divider{height:1px;background:var(--border);margin:12px 0}
-
-    .checklist{display:grid;gap:10px}
-    .check{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      padding:10px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:#0f0f0f;
-    }
-    .check input{width:auto}
+    .btn:active{ transform: translateY(1px); }
+    .tinyRow{ display:flex; gap:10px; }
+    .tinyRow .btn{ flex:1; }
+    .hr{ height:1px; background: var(--line); margin: 14px 0; }
 
     .resultBox{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:12px;
-      background:#0f0f0f;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.20);
+      border-radius: 16px;
+      padding: 12px 12px;
     }
-select.is-placeholder { color:#7a7a7a; }
 
-    
+    ul{ margin:0; padding-left: 18px; }
+    li{ padding: 8px 0; }
+    li:hover{ opacity: .95; }
+
+    /* checkbox list */
+    .check{
+      display:flex; align-items:center; gap:10px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      margin: 8px 0;
+    }
+    .check input{ width:18px; height:18px; }
+
+    /* placeholder select color */
+    select.is-placeholder { color: var(--muted2); }
+
+    /* scroll list */
+    .scrollList{
+      max-height: 220px;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    .splitItem{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      margin: 10px 0;
+    }
+    .splitItem .meta{
+      min-width:0;
+    }
+    .splitItem .meta .title{
+      font-weight: 900;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .splitItem .meta .code{
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .splitItem .actions{
+      display:flex;
+      gap:8px;
+      flex-shrink:0;
+    }
+    .splitItem .actions button{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--txt);
+      font-weight: 800;
+      cursor:pointer;
+    }
+    .splitItem .actions button.danger{
+      border-color: rgba(255,92,92,.35);
+      background: rgba(255,92,92,.14);
+    }
+
+    /* small status */
+    #status{ margin-top:10px; color: var(--muted); }
+
+    @media (max-width:520px){
+      h2{ font-size: 24px; }
+      .brand .name{ font-size: 20px; }
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-
-    <!-- Header -->
     <div class="card topbar">
-      <div>
-        <div class="brand">
-          <img src="./icon-192.png" alt="logo">
-<div class="name">$PLIT</div>
-
-
-          <span class="pill">realtime</span>
+      <img class="logo" src="./icon-192.png" alt="logo" />
+      <div class="brand">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0">
+          <div class="name">$SPLT</div>
+          <div class="pill">realtime</div>
         </div>
-        <div class="subtitle">split spese • euro • sync live</div>
-      </div>
-      <div id="status" class="status">Caricamento…</div>
-    </div>
-
-    <!-- Setup / Join -->
-    <div id="noRoom" class="card" style="display:none">
-      <h3 style="margin:0 0 10px">Crea uno $plit</h3>
-
-      <div class="muted" style="margin-bottom:8px">Quanti utenti partecipano? (2–10)</div>
-      <select id="userCount">
-        <option value="2">2 utenti</option>
-        <option value="3">3 utenti</option>
-        <option value="4">4 utenti</option>
-        <option value="5">5 utenti</option>
-        <option value="6">6 utenti</option>
-        <option value="7">7 utenti</option>
-        <option value="8">8 utenti</option>
-        <option value="9">9 utenti</option>
-        <option value="10">10 utenti</option>
-      </select>
-
-      <div style="height:10px"></div>
-
-      <div class="muted" style="margin-bottom:8px">Nomi utenti</div>
-      <div id="namesWrap" class="checklist"></div>
-
-      <div style="height:12px"></div>
-
-      <button id="createRoom">Crea uno $plit</button>
-
-      <div class="divider"></div>
-
-      <h3 style="margin:0 0 10px">Entra in uno $plit</h3>
-      <input id="joinInput" placeholder="Incolla link o codice $plit" />
-      <div style="height:10px"></div>
-      <button class="secondary" id="joinRoom">Entra</button>
-
-      <div class="muted" style="margin-top:10px">
-        Dopo “Crea uno $plit”, condividi il link agli altri.
+        <div class="sub">split spese • euro • sync live</div>
       </div>
     </div>
 
-    <!-- In $plit -->
-    <div id="inRoom" style="display:none">
+    <div id="status"></div>
 
-      <div class="card">
-        <div><b>Codice $plit:</b> <span id="roomIdText"></span> <span class="pill">condividi link</span></div>
-        <div class="muted" style="margin-top:6px">Link: <a id="shareLink" href="#"></a></div>
-        <div style="margin-top:10px" class="row">
-          <button class="secondary" id="copyLink" type="button">Copia link</button>
-          <button class="secondary" id="leaveRoom" type="button">Esci</button>
-        </div>
-      </div>
+    <!-- PAGE 1 -->
+    <div id="noRoom" class="card">
+      <div class="row">
+        <div class="col">
+          <h2>Crea uno $plit</h2>
 
-      <div class="grid">
-
-        <div class="card">
-          <h3 style="margin:0 0 10px">Saldo $plit</h3>
-          <div id="saldo" class="resultBox">—</div>
-          <div class="muted" style="margin-top:10px">
-            Suggerimento pagamenti per chiudere tutto (aggiornato live).
-          </div>
-        </div>
-
-        <div class="card">
-          <h3 style="margin:0 0 10px">Aggiungi spesa</h3>
-
-          <div class="row">
-            <input id="amount" type="text" inputmode="decimal" placeholder="Importo €" />
-            <select id="paidBy"></select>
-          </div>
-
-          <div style="height:10px"></div>
-
-          <input id="note" placeholder="Causale (obbligatoria)" />
-
-          <div style="height:14px"></div>
-
-          <div class="muted" style="margin-bottom:6px">Imputata a:</div>
-<button class="secondary" id="toggleParticipants" type="button">Seleziona partecipanti</button>
-
-<div style="height:10px"></div>
-
-<!-- selezione multipla partecipanti (chiusa di default) -->
-<div id="participantsBox" class="resultBox" style="display:none">
-
-            <div class="muted" style="margin-bottom:8px">Seleziona partecipanti:</div>
-
-            <div id="participantsWrap" class="checklist">
-              <div class="muted">Caricamento utenti…</div>
-            </div>
-
-            <div style="height:10px"></div>
-            <div class="row">
-              <button class="secondary" id="selectAll" type="button">Seleziona tutti</button>
-              <button class="secondary" id="selectNone" type="button">Deseleziona tutti</button>
-            </div>
-
-            <div class="muted" style="margin-top:10px">
-              Nota: chi ha pagato non è incluso automaticamente. Se vuoi selezionalo qui.
-            </div>
-          </div>
+          <div class="muted" style="margin-bottom:6px">Nome $plit (obbligatorio)</div>
+          <input id="splitName" class="field" placeholder="Es: Weekend Roma" autocomplete="off" />
 
           <div style="height:12px"></div>
 
-          <button id="addExpense">Aggiungi</button>
+          <div class="muted" style="margin-bottom:6px">Quanti siete? (2–10)</div>
+          <select id="userCount" class="field">
+            <option value="2" selected>2 utenti</option>
+            <option value="3">3 utenti</option>
+            <option value="4">4 utenti</option>
+            <option value="5">5 utenti</option>
+            <option value="6">6 utenti</option>
+            <option value="7">7 utenti</option>
+            <option value="8">8 utenti</option>
+            <option value="9">9 utenti</option>
+            <option value="10">10 utenti</option>
+          </select>
 
-          <div class="muted" style="margin-top:10px">
-            Per eliminare una spesa: cliccala nella lista.
-          </div>
+          <div style="height:12px"></div>
+
+          <div class="muted" style="margin-bottom:6px">Nomi utenti</div>
+          <div id="namesWrap" style="display:flex;flex-direction:column;gap:10px"></div>
+
+          <div style="height:14px"></div>
+          <button id="createRoom" class="btn">Crea $plit</button>
         </div>
 
+        <div class="col">
+          <h2>Entra in uno $plit</h2>
+          <div class="muted" style="margin-bottom:6px">Incolla link o codice $plit</div>
+          <input id="joinInput" class="field" placeholder="Es: https://…/#room=ABC123" autocomplete="off" />
+          <div style="height:14px"></div>
+          <button id="joinRoom" class="btn secondary">Entra</button>
+
+          <div class="hr"></div>
+          <div class="muted">Dopo “Crea $plit”, condividi il link agli altri.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div id="inRoom" style="display:none">
+      <div class="card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="min-width:240px;flex:1">
+            <div class="muted" style="font-weight:900;letter-spacing:.02em;margin-bottom:6px">Nome $plit</div>
+            <div id="splitNameText" style="font-size:22px;font-weight:900">—</div>
+
+            <div style="height:10px"></div>
+
+            <div class="muted" style="font-weight:900;letter-spacing:.02em;margin-bottom:6px">Codice $plit</div>
+            <div class="resultBox">
+              <div><b id="roomIdText">—</b></div>
+              <div class="muted" style="margin-top:6px">Link: <a id="shareLink" href="#" target="_blank" rel="noopener" style="color:var(--green)">—</a></div>
+
+              <div style="height:12px"></div>
+              <div class="tinyRow">
+                <button id="copyLink" class="btn secondary" type="button">Copia link</button>
+                <button id="leaveRoom" class="btn secondary" type="button">Esci</button>
+              </div>
+
+              <div style="height:12px"></div>
+              <button id="deleteSplit" class="btn danger" type="button" style="display:none">Elimina $plit (solo creatore)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col card">
+          <h2>Saldo $plit</h2>
+          <div id="saldo" class="resultBox">—</div>
+          <div class="muted" style="margin-top:10px">Suggerimento pagamenti per chiudere tutto (aggiornato live).</div>
+        </div>
+
+        <div class="col card">
+          <h2>Aggiungi spesa</h2>
+
+          <div class="row" style="gap:12px">
+            <div class="col" style="min-width:160px">
+              <input id="amount" class="field" placeholder="Importo €" inputmode="decimal" />
+            </div>
+            <div class="col" style="min-width:160px">
+              <select id="paidBy" class="field"></select>
+            </div>
+          </div>
+
+          <div style="height:10px"></div>
+          <input id="note" class="field" placeholder="Causale / nota (obbligatoria)" />
+
+          <div style="height:10px"></div>
+          <div class="muted" style="margin-bottom:6px">Imputata a:</div>
+          <button class="btn secondary" id="toggleParticipants" type="button">Seleziona partecipanti</button>
+
+          <div style="height:10px"></div>
+          <div id="participantsBox" class="resultBox" style="display:none">
+            <div class="tinyRow">
+              <button id="selectAll" class="btn secondary" type="button">Seleziona tutti</button>
+              <button id="selectNone" class="btn secondary" type="button">Deseleziona tutti</button>
+            </div>
+            <div style="height:10px"></div>
+            <div class="muted" style="margin-bottom:10px">Nota: chi ha pagato non è incluso automaticamente. Se vuoi selezionalo qui.</div>
+            <div id="participantsWrap"></div>
+          </div>
+
+          <div style="height:14px"></div>
+          <button id="addExpense" class="btn">Aggiungi</button>
+
+          <div class="muted" style="margin-top:10px">Per eliminare una spesa: cliccala nella lista.</div>
+        </div>
       </div>
 
       <div class="card">
-        <h3 style="margin:0 0 10px">Spese</h3>
+        <h2>Spese</h2>
         <div id="empty" class="muted">Nessuna spesa.</div>
         <ul id="list"></ul>
       </div>
 
+      <!-- elenco miei split (solo creati da me) -->
+      <div class="card">
+        <h2>I miei $plit</h2>
+        <div class="muted" style="margin-bottom:10px">Elenco degli $plit creati da questo dispositivo.</div>
+        <div id="mySplitsList" class="scrollList"></div>
+      </div>
     </div>
+
+    <script type="module" src="./app.js"></script>
   </div>
-
-  <script type="module" src="./app.js"></script>
-
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=4");
-    }
-  </script>
 </body>
 </html>
