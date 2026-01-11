@@ -12,6 +12,7 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  getDocs,
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 /* ---------------- Firebase config (tuo) ---------------- */
@@ -35,12 +36,16 @@ const statusDiv = document.getElementById("status");
 const noRoom = document.getElementById("noRoom");
 const inRoom = document.getElementById("inRoom");
 
+const splitNameInput = document.getElementById("splitName");
 const userCountSelect = document.getElementById("userCount");
 const namesWrap = document.getElementById("namesWrap");
 
 const createBtn = document.getElementById("createRoom");
 const joinBtn = document.getElementById("joinRoom");
 const joinInput = document.getElementById("joinInput");
+
+const splitNameText = document.getElementById("splitNameText");
+const deleteSplitBtn = document.getElementById("deleteSplit");
 
 const roomIdText = document.getElementById("roomIdText");
 const shareLinkA = document.getElementById("shareLink");
@@ -64,13 +69,21 @@ const selectNoneBtn = document.getElementById("selectNone");
 const emptyDiv = document.getElementById("empty");
 const list = document.getElementById("list");
 
+const mySplitsList = document.getElementById("mySplitsList");
+
 /* ---------------- State ---------------- */
 let roomId = null;
 let roomUsers = []; // [{id,name}]
 let expenses = [];
 
+let roomName = "";
+let ownerUid = "";
+
 let unsubRoom = null;
 let unsubExpenses = null;
+let unsubMySplits = null;
+
+let mySplits = []; // [{roomId, name, createdAt}]
 
 /* ---------------- Helpers ---------------- */
 function setStatus(msg) {
@@ -112,6 +125,10 @@ function cleanupSubs() {
   unsubExpenses = null;
 }
 
+function meUid() {
+  return auth.currentUser?.uid || "";
+}
+
 /* ---------------- UI helpers ---------------- */
 function toggleParticipantsBox(force) {
   if (!participantsBox) return;
@@ -134,8 +151,10 @@ function buildNameInputs() {
   namesWrap.innerHTML = "";
   for (let i = 0; i < n; i++) {
     const input = document.createElement("input");
+    input.className = "field";
     input.setAttribute("data-user-name", "1");
     input.placeholder = `Nome utente ${i + 1}`;
+    input.autocomplete = "off";
     if (existing[i]) input.value = existing[i];
     namesWrap.appendChild(input);
   }
@@ -197,6 +216,11 @@ function renderPaidByOptions() {
   }
 
   paidBySelect.classList.add("is-placeholder");
+}
+
+function isOwner() {
+  const uid = meUid();
+  return !!uid && !!ownerUid && uid === ownerUid;
 }
 
 /* ---------------- Accounting ---------------- */
@@ -309,7 +333,6 @@ function renderExpensesList() {
     const payerName = e.payerId ? userName(e.payerId) : "Qualcuno";
     const participants = Array.isArray(e.participantIds) ? e.participantIds : [];
     const note = e.note && e.note.trim() ? ` — ${e.note}` : "";
-
     const tag = ` — (tra: ${participants.map(userName).join(", ")})`;
 
     const li = document.createElement("li");
@@ -336,6 +359,73 @@ function renderShareLink() {
   shareLinkA.textContent = link;
 }
 
+function renderRoomHeader() {
+  if (splitNameText) splitNameText.textContent = roomName || "—";
+  if (deleteSplitBtn) deleteSplitBtn.style.display = isOwner() ? "block" : "none";
+}
+
+function renderMySplits() {
+  if (!mySplitsList) return;
+
+  // richiesta: elenco in fondo alla seconda pagina
+  if (!roomId) {
+    mySplitsList.innerHTML = "";
+    return;
+  }
+
+  if (!mySplits.length) {
+    mySplitsList.innerHTML = `<div class="muted">Nessuno $plit creato ancora.</div>`;
+    return;
+  }
+
+  mySplitsList.innerHTML = "";
+  for (const s of mySplits) {
+    const row = document.createElement("div");
+    row.className = "splitItem";
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+
+    const title = document.createElement("div");
+    title.className = "title";
+    title.textContent = s.name || "(senza nome)";
+
+    const code = document.createElement("div");
+    code.className = "code";
+    code.textContent = `codice: ${s.roomId}`;
+
+    meta.appendChild(title);
+    meta.appendChild(code);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const openBtn = document.createElement("button");
+    openBtn.textContent = "Apri";
+    openBtn.addEventListener("click", () => {
+      setHashRoom(s.roomId);
+      enterRoom(s.roomId);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "Elimina";
+    delBtn.className = "danger";
+    delBtn.addEventListener("click", async () => {
+      if (!confirm(`Eliminare lo $plit “${s.name || s.roomId}”?`)) return;
+      await deleteSplitById(s.roomId, true);
+    });
+
+    actions.appendChild(openBtn);
+    actions.appendChild(delBtn);
+
+    row.appendChild(meta);
+    row.appendChild(actions);
+
+    mySplitsList.appendChild(row);
+  }
+}
+
 function render() {
   if (!roomId) {
     noRoom.style.display = "block";
@@ -346,16 +436,46 @@ function render() {
   inRoom.style.display = "block";
 
   renderShareLink();
+  renderRoomHeader();
   renderSaldo();
   renderExpensesList();
+  renderMySplits();
 }
 
-/* ---------------- Room flow ---------------- */
+/* ---------------- Auth & MySplits index ---------------- */
 async function ensureAuth() {
   if (!auth.currentUser) await signInAnonymously(auth);
 }
 
+function subscribeMySplits() {
+  if (unsubMySplits) unsubMySplits();
+  const uid = meUid();
+  if (!uid) return;
+
+  const q = query(collection(db, "users", uid, "splits"), orderBy("createdAt", "desc"));
+  unsubMySplits = onSnapshot(
+    q,
+    (snap) => {
+      mySplits = snap.docs.map((d) => ({ roomId: d.id, ...(d.data() || {}) }));
+      renderMySplits();
+    },
+    (err) => {
+      console.error(err);
+    }
+  );
+}
+
+/* ---------------- Room flow ---------------- */
 async function createRoomFromSetup() {
+  const uid = meUid();
+  if (!uid) throw new Error("Non autenticato");
+
+  const splitName = (splitNameInput?.value || "").trim();
+  if (!splitName) {
+    alert("Inserisci il nome $plit (obbligatorio).");
+    return;
+  }
+
   const count = Number(userCountSelect?.value || 2);
   const inputs = Array.from(namesWrap.querySelectorAll("input[data-user-name]"));
   const names = inputs.map((i) => (i.value || "").trim()).slice(0, count);
@@ -368,10 +488,20 @@ async function createRoomFromSetup() {
   const users = names.map((name, idx) => ({ id: `u${idx + 1}`, name }));
 
   const id = roomCode();
+
+  // room principale
   await setDoc(doc(db, "rooms", id), {
+    name: splitName,
+    ownerUid: uid,
     users,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+  });
+
+  // indice “i miei split”
+  await setDoc(doc(db, "users", uid, "splits", id), {
+    name: splitName,
+    createdAt: serverTimestamp(),
   });
 
   setHashRoom(id);
@@ -397,6 +527,8 @@ async function enterRoom(id) {
 
       const data = snap.data() || {};
       roomUsers = Array.isArray(data.users) ? data.users : [];
+      roomName = data.name || "";
+      ownerUid = data.ownerUid || "";
 
       if (!roomUsers.length) {
         roomUsers = [
@@ -422,7 +554,7 @@ async function enterRoom(id) {
   unsubExpenses = onSnapshot(
     q,
     (snap) => {
-      expenses = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      expenses = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }));
       render();
     },
     (err) => {
@@ -440,9 +572,68 @@ function leaveRoom() {
   roomId = null;
   roomUsers = [];
   expenses = [];
+  roomName = "";
+  ownerUid = "";
   window.location.hash = "";
   setStatus("");
   render();
+}
+
+/* ---------------- Delete Split ---------------- */
+async function deleteSplitById(id, fromList = false) {
+  const uid = meUid();
+  if (!uid) return alert("Non autenticato.");
+
+  // Controllo owner lato client (la sicurezza vera la mettiamo nelle Rules)
+  const roomSnap = await getDoc(doc(db, "rooms", id));
+  if (!roomSnap.exists()) {
+    // pulisci indice se esiste
+    try { await deleteDoc(doc(db, "users", uid, "splits", id)); } catch {}
+    if (!fromList) leaveRoom();
+    return;
+  }
+
+  const data = roomSnap.data() || {};
+  const owner = data.ownerUid || "";
+  if (owner && owner !== uid) {
+    alert("Solo chi ha creato lo $plit può eliminarlo.");
+    return;
+  }
+
+  setStatus("Eliminazione $plit…");
+
+  // 1) elimina tutte le spese (best-effort)
+  try {
+    const exSnap = await getDocs(collection(db, "rooms", id, "expenses"));
+    for (const d of exSnap.docs) {
+      await deleteDoc(doc(db, "rooms", id, "expenses", d.id));
+    }
+  } catch (e) {
+    console.warn("Non sono riuscito a cancellare tutte le spese:", e);
+  }
+
+  // 2) elimina room
+  try {
+    await deleteDoc(doc(db, "rooms", id));
+  } catch (e) {
+    setStatus("");
+    alert("Errore eliminazione $plit: " + (e?.message || e));
+    return;
+  }
+
+  // 3) elimina indice “i miei split”
+  try {
+    await deleteDoc(doc(db, "users", uid, "splits", id));
+  } catch {}
+
+  setStatus("");
+
+  if (roomId === id) {
+    leaveRoom();
+  } else {
+    // refresh lista
+    renderMySplits();
+  }
 }
 
 /* ---------------- Actions ---------------- */
@@ -480,7 +671,7 @@ async function addExpense() {
     participantIds,
     note,
     createdAt: serverTimestamp(),
-
+    createdBy: meUid(),
   });
 
   // Reset + chiudi box
@@ -545,6 +736,13 @@ copyLinkBtn?.addEventListener("click", async () => {
 
 leaveRoomBtn?.addEventListener("click", leaveRoom);
 
+deleteSplitBtn?.addEventListener("click", async () => {
+  if (!roomId) return;
+  if (!isOwner()) return alert("Solo chi ha creato lo $plit può eliminarlo.");
+  if (!confirm(`Eliminare lo $plit “${roomName || roomId}”?`)) return;
+  await deleteSplitById(roomId, false);
+});
+
 addExpenseBtn?.addEventListener("click", () => {
   addExpense().catch((e) => {
     console.error(e);
@@ -565,8 +763,11 @@ window.addEventListener("hashchange", () => {
 
   ensureAuth()
     .then(() => {
+      subscribeMySplits();
+
       const fromHash = getRoomFromHashOrText();
       if (fromHash) enterRoom(fromHash);
+
       setStatus("");
       render();
     })
