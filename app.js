@@ -340,7 +340,7 @@ function renderExpensesList() {
     const participants = Array.isArray(e.participantIds) ? e.participantIds : [];
     
     
-    const note = (e.note || "").trim() ? ` — ${e.note}` : "";
+    const note = (e.note || "").trim() ? ` - ${e.note}` : "";
     const tag = ` (Per: ${participants.map(userName).join(", ")})`;
 
     const li = document.createElement("li");
