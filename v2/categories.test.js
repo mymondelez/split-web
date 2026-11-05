@@ -1,12 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {CATEGORIES,categoryInfo,selectedCategory,categoryBreakdown} from "./categories.js";
+import {CATEGORIES,categoryInfo,selectedCategory,categoryBreakdown,filterExpensesByCategory} from "./categories.js";
 import {totalSpentCents} from "./accounting.js";
 
 test("Nove categorie richieste, tutte utilizzabili ma nessuna obbligatoria",()=>{
   assert.deepEqual(CATEGORIES.map(x=>x.label),[
     "Carburante","Autostrada","Pedaggi","Supermercato","Cibo e bevande",
-    "Casa e alloggio","Musei / attrazioni","Acquisto","Svago"
+    "Casa e alloggio","Musei / attrazioni","Acquisti","Svago"
   ]);
   assert.equal(selectedCategory(""),"");
   assert.equal(selectedCategory("custom",""),"");
@@ -53,4 +53,33 @@ test("I valori non validi non sono inclusi nel riepilogo",()=>{
   const summary=categoryBreakdown([{amountCents:0,category:"fuel"},{amountCents:120,category:"groceries"},{amountCents:NaN,category:""}]);
   assert.equal(summary.totalCents,120);
   assert.equal(summary.count,1);
+});
+
+test("Il filtro categoria distingue tutti / senza categoria / categoria scelta",()=>{
+  const expenses=[
+    {id:"a",category:"fuel",amountCents:500},
+    {id:"b",category:"",amountCents:300},
+    {id:"c",amountCents:120},
+    {id:"d",category:"food",amountCents:400},
+    {id:"e",category:"custom:Gita in barca",amountCents:800},
+    {id:"f",category:"custom:gita in barca",amountCents:200}
+  ];
+  assert.equal(filterExpensesByCategory(expenses,null),expenses);
+  assert.deepEqual(filterExpensesByCategory(expenses,"fuel").map(e=>e.id),["a"]);
+  assert.deepEqual(filterExpensesByCategory(expenses,"").map(e=>e.id),["b","c"]);
+  assert.deepEqual(filterExpensesByCategory(expenses,"custom:gita in barca").map(e=>e.id),["e","f"]);
+  assert.deepEqual(filterExpensesByCategory(expenses,"museums"),[]);
+  assert.equal(expenses.length,6);
+});
+test("Riepilogo per categoria e filtro riportano gli stessi importi",()=>{
+  const expenses=[
+    {id:"f1",category:"fuel",amountCents:4001},
+    {id:"f2",category:"fuel",amountCents:3002},
+    {id:"s1",category:"",amountCents:599},
+    {id:"o1",category:"food",amountCents:1200}
+  ];
+  const {rows,totalCents}=categoryBreakdown(expenses);
+  for(const row of rows)
+    assert.equal(row.totalCents,totalSpentCents(filterExpensesByCategory(expenses,row.id)));
+  assert.equal(totalCents,totalSpentCents(expenses));
 });
