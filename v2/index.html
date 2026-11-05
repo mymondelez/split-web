@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f5f8f8">
+<meta name="theme-color" content="#0c161b">
 <meta name="description" content="$plit 2 — dividi le spese, controlla il totale e regola i saldi con semplicità.">
 <title>$plit 2 — Le spese, in chiaro</title>
 <link rel="stylesheet" href="../styles-v2.css">
+<link rel="stylesheet" href="./dark-theme.css?v=2">
 </head>
 <body>
 <div class="shell">
@@ -15,7 +16,7 @@
       <div class="brand-mark"><span>$</span></div>
       <div><div class="brand-title">plit<span style="color:#0d9f8e">.</span></div><div class="brand-sub">Le spese, in chiaro</div></div>
     </a>
-    <div class="top-right"><span class="mode-tag">● Modalità locale</span><span class="version-tag">VERSIONE 2.0</span></div>
+    <div class="top-right"><span class="mode-tag">● Modalità locale</span><span class="version-tag">VERSIONE 2.1</span></div>
   </header>
   <p class="notice" role="status">Questa è una nuova versione di prova indipendente: le spese sono salvate esclusivamente in questo browser. Non è collegata al database dell'app originale e i codici non funzionano su altri dispositivi.</p>
   <main>
@@ -40,7 +41,7 @@
         <section class="card">
           <h2 class="card-title">↗ Apri uno $plit</h2><p class="card-subtitle">Ritrova un gruppo salvato su questo dispositivo.</p>
           <form id="joinForm"><label class="form-label" for="joinInput">Codice del gruppo</label><input class="input" id="joinInput" placeholder="Incolla il codice o il link" autocomplete="off"><button class="btn ghost block" type="submit">Apri con il codice →</button></form>
-          <div style="border-top:1px solid #e5efec;margin:24px 0 18px"></div>
+          <div class="home-divider"></div>
           <div class="section-header"><h2 class="card-title" style="margin:0">I miei $plit</h2><span class="small-muted" id="groupCount">0 gruppi</span></div>
           <div class="splits-list" id="mySplitsList"></div>
         </section>
@@ -79,6 +80,22 @@
         </section>
       </div>
 
+      <section class="card category-card" aria-labelledby="categorySummaryTitle">
+        <div class="section-header">
+          <div><h2 id="categorySummaryTitle">Spese per categoria</h2><span class="small-muted">Dove vanno i soldi del gruppo</span></div>
+          <span class="small-muted">Riepilogo completo</span>
+        </div>
+        <p class="category-intro">Le categorie servono solo per analizzare i costi: non cambiano la divisione delle spese né i rimborsi.</p>
+        <div class="category-table-wrap">
+          <table class="category-table" aria-label="Riepilogo spese per categoria">
+            <thead><tr><th scope="col">Categoria</th><th scope="col" class="num">Spese</th><th scope="col" class="num">Totale</th><th scope="col" class="num">%</th></tr></thead>
+            <tbody id="categoryTableBody"></tbody>
+            <tfoot id="categoryTableFoot"></tfoot>
+          </table>
+        </div>
+        <p class="category-note">Le spese senza categoria sono conteggiate nella voce “Senza categoria”.</p>
+      </section>
+
       <div class="activity-grid">
         <section class="card">
           <div class="section-header"><div><h2>Le spese</h2><div class="small-muted">Tutti i movimenti del gruppo</div></div><input id="expenseSearch" class="search" type="search" placeholder="⌕ Cerca una spesa" aria-label="Cerca nelle spese"></div>
@@ -94,8 +111,10 @@
             </div>
             <label class="form-label" for="expenseNote">Per cosa?</label>
             <input id="expenseNote" class="input" maxlength="140" placeholder="Es. Cena al ristorante" required>
-            <label class="form-label" for="category">Categoria</label>
-            <select class="select" id="category"><option value="food">🍽️ Cibo e bevande</option><option value="travel">🚆 Trasporti e viaggi</option><option value="home">🏠 Casa e alloggio</option><option value="shop">🛍️ Acquisti</option><option value="other">💳 Altro</option></select>
+            <label class="form-label" for="category">Categoria <span class="category-hint">(facoltativa)</span></label>
+            <select class="select" id="category"><option value="">◌ Senza categoria</option></select>
+            <input class="input category-custom" id="customCategory" maxlength="48" placeholder="Scrivi il nome della categoria" aria-label="Nuova categoria personalizzata" hidden>
+            <p class="muted-note">Scegli una categoria, scrivine una tua oppure lascia senza categoria. Potrai modificarla anche dopo.</p>
             <div class="form-label">Dividi tra</div>
             <div class="mini-actions"><button class="text-btn" id="selectAll" type="button">Seleziona tutti</button><button class="text-btn" id="selectNone" type="button">Deseleziona tutti</button></div>
             <div class="participants" id="participantsWrap"></div>
@@ -109,6 +128,19 @@
   </main>
   <footer class="footer">$plit 2 · Prototipo indipendente · Nessuna modifica alla versione originale</footer>
 </div>
+<dialog id="categoryDialog" class="category-dialog" aria-labelledby="categoryDialogTitle">
+  <form id="editCategoryForm">
+    <h2 id="categoryDialogTitle">Modifica categoria</h2>
+    <p class="dialog-sub" id="categoryDialogDescription"></p>
+    <label class="form-label" for="editCategorySelect">Categoria <span class="category-hint">(facoltativa)</span></label>
+    <select class="select" id="editCategorySelect"><option value="">◌ Senza categoria</option></select>
+    <input class="input category-custom" id="editCategoryCustom" maxlength="48" placeholder="Nuovo nome categoria" aria-label="Categoria personalizzata" hidden>
+    <div class="dialog-actions">
+      <button class="btn ghost sm" type="button" id="cancelCategory">Annulla</button>
+      <button class="btn sm" type="submit">Salva categoria</button>
+    </div>
+  </form>
+</dialog>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 <script type="module" src="./app-v2.js"></script>
 </body>
