@@ -271,3 +271,8 @@ body{background:radial-gradient(ellipse at 82% -7%,#174047 0,transparent 36%),li
 .import-local{border-top:1px solid #3a545b;margin-top:25px;padding-top:20px}
 .import-local h3{font-size:16px;font-weight:800;margin:0}
 .import-local .btn.block{margin-top:12px}
+
+/* Split Cloud V2.4 — prioritise the expense form immediately after balances. */
+.expense-entry-card{margin:0 0 18px}
+.expense-entry-card #expenseForm{max-width:780px}
+.activity-list{margin-bottom:18px}
