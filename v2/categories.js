@@ -4,22 +4,22 @@
  * Existing V2 data is preserved, including legacy labels and uncategorized expenses.
  */
 export const CATEGORIES = Object.freeze([
-  {id:"fuel", label:"Carburante", icon:"⛽", color:"#4fd2b0"},
-  {id:"motorway", label:"Autostrada", icon:"🛣️", color:"#5b9cf4"},
-  {id:"tolls", label:"Pedaggi", icon:"🚧", color:"#f4ad68"},
-  {id:"groceries", label:"Supermercato", icon:"🛒", color:"#b290ee"},
-  {id:"food", label:"Cibo e bevande", icon:"🍽️", color:"#f38e8d"},
-  {id:"home", label:"Casa e alloggio", icon:"🏠", color:"#65cbe0"},
-  {id:"museums", label:"Musei / attrazioni", icon:"🏛️", color:"#e0b96a"},
-  {id:"purchase", label:"Acquisto", icon:"🛍️", color:"#e686bc"},
-  {id:"leisure", label:"Svago", icon:"🎭", color:"#8dc77e"}
+  {id:"fuel", label:"Carburante", icon:"⛽", color:"#24e4ef"},
+  {id:"motorway", label:"Autostrada", icon:"🛣️", color:"#a7ff62"},
+  {id:"tolls", label:"Pedaggi", icon:"🚧", color:"#ffbf61"},
+  {id:"groceries", label:"Supermercato", icon:"🛒", color:"#b6a0ff"},
+  {id:"food", label:"Cibo e bevande", icon:"🍽️", color:"#ff8cca"},
+  {id:"home", label:"Casa e alloggio", icon:"🏠", color:"#62c6ff"},
+  {id:"museums", label:"Musei / attrazioni", icon:"🏛️", color:"#ffe276"},
+  {id:"purchase", label:"Acquisti", icon:"🛍️", color:"#ff9b85"},
+  {id:"leisure", label:"Svago", icon:"🎭", color:"#7fe4bd"}
 ]);
 const OLD = {
   travel:{id:"travel",label:"Trasporti e viaggi (V2 precedente)",icon:"🚆",color:"#7eabd4"},
   shop:{id:"shop",label:"Acquisti (V2 precedente)",icon:"🛍️",color:"#d29be4"},
   other:{id:"other",label:"Altro (V2 precedente)",icon:"💳",color:"#9bafba"}
 };
-const NONE={id:"",label:"Senza categoria",icon:"◌",color:"#70868d"};
+const NONE={id:"",label:"Senza categoria",icon:"◌",color:"#a9bac2"};
 const normalized=value=>String(value??"").trim().replace(/\s+/g," ").slice(0,48);
 export function categoryInfo(raw) {
   const rawValue=String(raw??"").trim().replace(/\s+/g," ");
@@ -30,7 +30,7 @@ export function categoryInfo(raw) {
   if (Object.hasOwn(OLD,value)) return OLD[value];
   // "custom:" identifies user-defined labels; unknown historical values are also preserved.
   const label=(value.startsWith("custom:")?value.slice(7):value).trim();
-  return label?{id:"custom:"+label.toLocaleLowerCase("it"),label,icon:"✦",color:"#dbadf4"}:NONE;
+  return label?{id:"custom:"+label.toLocaleLowerCase("it"),label,icon:"✦",color:"#dcb1ff"}:NONE;
 }
 export function selectedCategory(choice, customLabel="") {
   if (choice==="custom") {
@@ -54,4 +54,10 @@ export function categoryBreakdown(expenses) {
   }
   const rows=[...groups.values()].sort((a,b)=>b.totalCents-a.totalCents||a.label.localeCompare(b.label,"it"));
   return {rows,totalCents,count};
+}
+
+/** null = all expenses; empty string = expenses without a category. */
+export function filterExpensesByCategory(expenses, categoryId = null) {
+  if (categoryId === null) return expenses;
+  return expenses.filter(expense => categoryInfo(expense.category).id === categoryId);
 }
