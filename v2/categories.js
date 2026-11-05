@@ -22,8 +22,9 @@ const OLD = {
 const NONE={id:"",label:"Senza categoria",icon:"◌",color:"#70868d"};
 const normalized=value=>String(value??"").trim().replace(/\s+/g," ").slice(0,48);
 export function categoryInfo(raw) {
-  const value=normalized(raw);
-  if (!value) return NONE;
+  const rawValue=String(raw??"").trim().replace(/\s+/g," ");
+  if (!rawValue) return NONE;
+  const value=rawValue.startsWith("custom:")?"custom:"+normalized(rawValue.slice(7)):normalized(rawValue);
   const known=CATEGORIES.find(c=>c.id===value);
   if (known) return known;
   if (Object.hasOwn(OLD,value)) return OLD[value];
