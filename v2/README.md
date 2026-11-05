@@ -3,12 +3,17 @@
 La versione originale è nel ramo `main` e non viene modificata.
 
 ## Nuove funzioni
-- Interfaccia responsive più moderna con dashboard e grafico ad anello.
+- Interfaccia responsive in tema **scuro**, con dashboard, card e grafico ad anello.
 - **Totale speso dal gruppo**: somma di ogni spesa una sola volta, indipendentemente da chi paga e dalle quote.
 - Contatore delle spese, numero partecipanti e media statistica per persona.
 - Riepilogo degli importi effettivamente pagati da ogni partecipante.
 - Calcolo saldi e suggerimenti di rimborso in centesimi interi.
-- Categorie delle spese e filtro per descrizione o pagante.
+- Nove categorie: Carburante, Autostrada, Pedaggi, Supermercato, Cibo e bevande, Casa e alloggio, Musei/attrazioni, Acquisto, Svago.
+- Categoria completamente **facoltativa**, con voce "Senza categoria" e possibilità di aggiungere un nome personalizzato.
+- Categoria modificabile in seguito direttamente dall’elenco delle spese senza variare saldo, spesa o quote.
+- **Tabella spese per categoria** con numero di spese, totale in euro, peso percentuale e mini barre grafiche; comprende anche "Senza categoria". Il totale della tabella coincide con il totale del gruppo.
+- Compatibilità con le vecchie categorie della prima bozza V2. Le vecchie spese già salvate rimangono visibili.
+- Filtro spese per descrizione o pagante.
 
 ## Isolamento dei dati
 **Questa V2 è intenzionalmente una demo standalone basata su localStorage** con chiave separata `split-web-v2-local-rooms-v1`.
@@ -21,7 +26,7 @@ Per una V2 realmente condivisibile e pronta alla pubblicazione serve configurare
 Aprire `v2/index.html` con un server HTTP locale (ad esempio `python -m http.server 8000` dalla radice del repository, poi `http://localhost:8000/v2/`). Non aprire con `file://`, perché il browser potrebbe bloccare i moduli ES.
 
 ## Test
-Con Node.js 20+:
+Sono previsti test per aritmetica in centesimi, rimborsi e categorie non obbligatorie. Con Node.js 20+:
 ```bash
 cd v2
 npm test
