@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function codeOK(id) { return id.matches('^[A-HJ-NP-Z2-9]{24}$'); }
+    function validRoomData(d) {
+      return d.keys().hasOnly(['name','users','ownerUid','createdAt','updatedAt'])
+        && d.keys().hasAll(['name','users','ownerUid','createdAt','updatedAt'])
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 80
+        && d.users is list && d.users.size() >= 2 && d.users.size() <= 10
+        && d.ownerUid == request.auth.uid
+        && d.createdAt == request.time && d.updatedAt == request.time;
+    }
+    function roomExists(id) {
+      return exists(/databases/$(database)/documents/roomsV2/$(id));
+    }
+    function validExpenseData(d) {
+      return d.keys().hasOnly(['amountCents','payerId','participantIds','note','category','createdBy','createdAt'])
+        && d.keys().hasAll(['amountCents','payerId','participantIds','note','category','createdBy','createdAt'])
+        && d.amountCents is int && d.amountCents >= 1 && d.amountCents <= 1000000000
+        && d.payerId is string && d.payerId.matches('^u([1-9]|10)$')
+        && d.participantIds is list && d.participantIds.size() >= 1 && d.participantIds.size() <= 10
+        && d.note is string && d.note.size() >= 1 && d.note.size() <= 140
+        && d.category is string && d.category.size() <= 55
+        && d.createdBy == request.auth.uid && d.createdAt == request.time;
+    }
+
+    // Access by possession of a high-entropy invitation code.
+    // No collection listing; anonymous sign-in required even for viewing.
+    match /roomsV2/{roomId} {
+      allow get: if signedIn() && codeOK(roomId);
+      allow list: if false;
+      allow create: if signedIn() && codeOK(roomId) && validRoomData(request.resource.data);
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+
+      match /expenses/{expenseId} {
+        allow get, list: if signedIn() && codeOK(roomId) && roomExists(roomId);
+        allow create: if signedIn() && codeOK(roomId) && roomExists(roomId)
+          && validExpenseData(request.resource.data);
+        allow update: if signedIn() && codeOK(roomId) && roomExists(roomId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['category'])
+          && request.resource.data.category is string
+          && request.resource.data.category.size() <= 55;
+        allow delete: if signedIn() && codeOK(roomId) && roomExists(roomId);
+      }
+    }
+
+    // Private per-device index. Anonymous auth UID differs on other devices.
+    match /usersV2/{userId}/splits/{roomId} {
+      allow get, list: if signedIn() && request.auth.uid == userId;
+      allow create, update: if signedIn() && request.auth.uid == userId && codeOK(roomId)
+        && request.resource.data.keys().hasOnly(['name','users','createdAt'])
+        && request.resource.data.keys().hasAll(['name','users','createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 80
+        && request.resource.data.users is list && request.resource.data.users.size() >= 2
+        && request.resource.data.users.size() <= 10;
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+  }
+}
