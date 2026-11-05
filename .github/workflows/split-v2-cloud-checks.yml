@@ -1,0 +1,24 @@
+name: Split V2 Cloud checks
+on:
+  push:
+    branches: [v2-cloud]
+  pull_request:
+    branches: [v2-cloud]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unit tests
+        working-directory: v2
+        run: npm test
+      - name: Check public Firebase config is not pointed at V1
+        run: |
+          if grep -Eq 'projectId:[[:space:]]*"split-da653"' v2/firebase-config.js; then
+            echo "ERROR: cannot reuse V1 Firebase project for Split V2 Cloud"; exit 1
+          fi
