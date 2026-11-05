@@ -1,10 +1,10 @@
 import {parseEuroCents,totalSpentCents,amountPaidByUser,computeBalances,settleDebts} from "./accounting.js";
+import {CATEGORIES,categoryInfo,selectedCategory,categoryBreakdown} from "./categories.js";
 const STORAGE_KEY="split-web-v2-local-rooms-v1";
 const $=id=>document.getElementById(id);
 const euro=cents=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(cents/100);
 const colors=["#0cb99b","#5b9cf4","#f6a36d","#9779dc","#e86b97","#54bcba","#d3a93d","#7e9fb4","#df8576","#6cad85"];
-const categories={food:["🍽️","food"],travel:["🚆","travel"],home:["🏠","home"],shop:["🛍️","shop"],other:["💳","other"]};
-let rooms=readRooms(),currentId=null,toastTimer;
+let rooms=readRooms(),currentId=null,toastTimer,editingExpenseId=null;
 function readRooms(){try{const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");return data&&typeof data==="object"&&!Array.isArray(data)?data:{}}catch{return {}}}
 function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(rooms));return true}catch{notify("Impossibile salvare. Verifica lo spazio o i permessi del browser.");return false}}
 function notify(message){const el=$("toast");el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{el.hidden=true},4200)}
@@ -67,10 +67,10 @@ function createExpense(event){
   if(!note){notify("Inserisci una descrizione della spesa.");return}
   if(!room.users.some(u=>u.id===payerId)){notify("Seleziona chi ha pagato.");return}
   if(!participantIds.length){notify("Seleziona almeno un partecipante.");return}
-  const expense={id:(crypto.randomUUID?.()||makeCode()),amountCents,payerId,participantIds,note,category:$("category").value,createdAt:Date.now()};
+  const expense={id:(crypto.randomUUID?.()||makeCode()),amountCents,payerId,participantIds,note,category:selectedCategory($("category").value,$("customCategory").value),createdAt:Date.now()};
   room.expenses.unshift(expense);
   if(!save()){room.expenses.shift();return}
-  $("expenseForm").reset();buildParticipants(room);renderRoom();notify("Spesa registrata.");
+  $("expenseForm").reset();$("customCategory").hidden=true;buildParticipants(room);renderRoom();notify("Spesa registrata.");
 }
 function deleteExpense(id){
   const room=currentRoom();if(!room)return;
@@ -100,6 +100,7 @@ function renderRoom(){
   $("averagePerPerson").textContent=euro(Math.round(total/room.users.length));
   renderChart(room,paid,total);
   renderBalances(room,expenses);
+  renderCategoryTable(expenses);
   renderExpenses(room,expenses);
   buildParticipants(room);
 }
@@ -115,6 +116,30 @@ function renderChart(room,paid,total){
     const row=text("div","legend-item",""),dot=text("div","legend-dot","");dot.style.background=item.color;
     row.append(dot,text("span","legend-label",item.u.name),text("strong","legend-value",euro(item.amount)));legend.append(row)
   }
+}
+function renderCategoryTable(expenses){
+  const {rows,totalCents,count}=categoryBreakdown(expenses);
+  const body=$("categoryTableBody"),foot=$("categoryTableFoot");
+  body.replaceChildren();foot.replaceChildren();
+  if(!rows.length){
+    const tr=document.createElement("tr"),td=text("td","category-none","Nessuna spesa da riepilogare.");td.colSpan=4;tr.append(td);body.append(tr);
+  }
+  for(const item of rows){
+    const tr=document.createElement("tr");
+    const first=document.createElement("th");first.scope="row";
+    const wrap=text("div","cat-stack",""),row=text("div","cat-name","");
+    row.append(text("span","cat-icon",item.icon),text("span","",item.label));
+    const track=text("div","cat-bar-track",""),fill=text("div","cat-bar-fill","");
+    const percentage=totalCents?100*item.totalCents/totalCents:0;
+    fill.style.width=percentage+"%";fill.style.background=item.color;track.append(fill);
+    wrap.append(row,track);first.append(wrap);
+    tr.append(first,text("td","num",item.count),text("td","num",euro(item.totalCents)),text("td","num",new Intl.NumberFormat("it-IT",{maximumFractionDigits:1}).format(percentage)+"%"));
+    body.append(tr);
+  }
+  const footRow=document.createElement("tr"),head=text("th","","Totale complessivo");
+  head.scope="row";
+  footRow.append(head,text("td","num",count),text("td","num",euro(totalCents)),text("td","num",totalCents?"100%":"0%"));
+  foot.append(footRow);
 }
 function renderBalances(room,expenses){
   const wrap=$("balanceList");wrap.replaceChildren();
@@ -134,17 +159,63 @@ function renderExpenses(room,expenses){
   list.replaceChildren();
   if(!shown.length){list.append(text("div","empty-box",search?"Nessuna spesa corrisponde alla ricerca.":"Ancora nessuna spesa. Aggiungine una per iniziare."));return}
   for(const e of shown){
-    const row=text("div","expense-row",""),cat=categories[e.category]||categories.other;
-    const pict=text("div","expense-icon "+cat[1],cat[0]);
+    const row=text("div","expense-row",""),cat=categoryInfo(e.category);
+    const iconClass=CATEGORIES.some(c=>c.id===cat.id)?cat.id:"other";
+    const pict=text("div","expense-icon "+iconClass,cat.icon);
     const main=text("div","expense-main",""),payer=room.users.find(u=>u.id===e.payerId)?.name||"Sconosciuto";
     const shared=(e.participantIds||[]).map(id=>room.users.find(u=>u.id===id)?.name||"?").join(", ");
     main.append(text("div","expense-title",e.note),text("div","expense-meta",payer+" ha pagato · Per: "+shared));
+    const chip=text("button","category-chip"+(!e.category?" none":""),"");
+    chip.type="button";chip.title="Modifica categoria";chip.setAttribute("aria-label","Modifica categoria della spesa "+e.note);
+    chip.append(text("span","",cat.icon+" "+cat.label),text("span","","✎"));
+    chip.addEventListener("click",()=>openCategoryEditor(e.id));
+    main.append(chip);
     const amount=text("div","expense-amount","");amount.append(text("strong","",euro(e.amountCents)),text("small","","Spesa"));
     const del=text("button","expense-delete","×");del.type="button";del.title="Elimina questa spesa";del.setAttribute("aria-label","Elimina spesa "+e.note);del.addEventListener("click",()=>deleteExpense(e.id));
     row.append(pict,main,amount,del);list.append(row);
   }
 }
+function initCategoryOptions(){
+  for(const select of [$("category"),$("editCategorySelect")]){
+    for(const item of CATEGORIES)select.add(new Option(item.icon+" "+item.label,item.id));
+    select.add(new Option("✎ Categoria personalizzata…","custom"));
+  }
+}
+function toggleCustomCategory(select,input){
+  input.hidden=select.value!=="custom";
+  if(input.hidden)input.value="";
+}
+function openCategoryEditor(id){
+  const expense=currentRoom()?.expenses?.find(e=>e.id===id);
+  if(!expense)return;
+  editingExpenseId=id;
+  $("categoryDialogDescription").textContent=expense.note+" · "+euro(expense.amountCents);
+  const current=expense.category||"";
+  const choice=CATEGORIES.some(c=>c.id===current)?current:(current?"custom":"");
+  $("editCategorySelect").value=choice;
+  $("editCategoryCustom").hidden=choice!=="custom";
+  $("editCategoryCustom").value=choice==="custom"?categoryInfo(current).label:"";
+  $("categoryDialog").showModal();
+}
+function saveEditedCategory(event){
+  event.preventDefault();
+  const room=currentRoom(),expense=room?.expenses?.find(e=>e.id===editingExpenseId);
+  if(!expense)return;
+  const previous=expense.category;
+  expense.category=selectedCategory($("editCategorySelect").value,$("editCategoryCustom").value);
+  if(!save()){expense.category=previous;return}
+  $("categoryDialog").close();editingExpenseId=null;
+  renderCategoryTable(room.expenses);
+  renderExpenses(room,room.expenses);
+  notify("Categoria aggiornata.");
+}
 function setup(){
+  initCategoryOptions();
+  $("category").addEventListener("change",()=>toggleCustomCategory($("category"),$("customCategory")));
+  $("editCategorySelect").addEventListener("change",()=>toggleCustomCategory($("editCategorySelect"),$("editCategoryCustom")));
+  $("editCategoryForm").addEventListener("submit",saveEditedCategory);
+  $("cancelCategory").addEventListener("click",()=>$("categoryDialog").close());
+  $("categoryDialog").addEventListener("close",()=>{editingExpenseId=null});
   const count=$("userCount");for(let n=2;n<=10;n++)count.add(new Option(n+" persone",String(n)));renderNameInputs();
   count.addEventListener("change",renderNameInputs);
   $("createForm").addEventListener("submit",createRoom);
