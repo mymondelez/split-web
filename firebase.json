@@ -1,0 +1,22 @@
+{
+  "hosting": {
+    "public": "v2",
+    "ignore": [
+      "firebase-config.example.js",
+      "**/.*",
+      "**/node_modules/**",
+      "**/*.test.js",
+      "README.md",
+      "package.json"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}
