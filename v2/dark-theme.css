@@ -124,3 +124,143 @@ option{background:#15242a;color:#ecf5f4}
   .cat-bar-track{max-width:160px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
+
+
+/* Split V2.2 — neon accents and accessible interactive controls.
+ * Colors are never the only way to identify data: each entry also has text and an icon.
+ */
+:root{
+  --neon-cyan:#28e1f1;
+  --neon-lime:#e7ff78;
+  --neon-violet:#c4a8ff;
+  --neon-amber:#ffd875;
+  --neon-coral:#ffab92;
+  --teal:#28e1f1;
+  --teal-dark:#18b6c6;
+  --ink:#f4faf9;
+  --muted:#adc0c5;
+  --line:#33484e;
+}
+body{background:radial-gradient(ellipse at 82% -7%,#174047 0,transparent 36%),linear-gradient(145deg,#0b151b,#111b21 78%);color:#f5faf9}
+.brand-title{font-size:27px;letter-spacing:-1.3px;color:#fff}
+.brand-dot{color:var(--neon-cyan)}
+.brand-mark{background:linear-gradient(145deg,#13c7db,#1388d2);box-shadow:0 10px 28px #08dced42}
+.version-tag{background:#183237;color:#c6faff;border:1px solid #2b626d;padding:6px 11px;font-size:11px}
+.topbar{margin-bottom:22px}
+.hero{background:radial-gradient(circle at 83% 35%,#298d9a77 0%,transparent 42%),linear-gradient(120deg,#103c4f,#195c67 70%,#287d77)}
+.eyebrow{color:#a3fcf4}
+.hero p{color:#e2f9f7}
+.card{border-color:#30464c;background:linear-gradient(155deg,#1b2a30,#19272e)}
+.btn{background:var(--neon-cyan);border-color:var(--neon-cyan);color:#08232a;font-weight:850}
+.btn:hover{background:#8ff4ff;border-color:#8ff4ff;color:#071e24}
+.btn:focus-visible,.category-chip:focus-visible,.category-edit:focus-visible,.category-filter-button:focus-visible,.expense-delete:focus-visible,.search:focus-visible{
+  outline:3px solid var(--neon-amber);outline-offset:3px
+}
+.btn.ghost{background:#1f3b42;color:#b6f5ff;border-color:#3c6870}
+.btn.ghost:hover{background:#28505a;border-color:#499eae}
+.btn.danger{background:#493039;border-color:#845362;color:#ffc3b4}
+.btn.danger:hover{background:#5f3941;border-color:#b0737b}
+.form-label{color:#c8d7dc}
+.input,.select,.search{background:#111e25;border-color:#3b5660;color:#f5fbf9}
+.input:focus,.select:focus,.search:focus{border-color:var(--neon-cyan);box-shadow:0 0 0 3px #28e1f12b}
+.total-card{background:radial-gradient(circle at 100% 100%,#32a89370 0%,transparent 50%),linear-gradient(130deg,#0d5261,#0e6673 70%,#116b70)}
+.total-card .kicker{color:#d2faff}
+.total-value{color:#fff;font-variant-numeric:tabular-nums}
+.total-card .total-hint{color:#d6f5f2}
+.mini-card{background:#1b2c32;border-color:#355059}
+.mini-icon{background:#254d56;color:#bcfaff}
+.mini-icon.blue{background:#303f67;color:#d8ccff}
+.mini-icon.peach{background:#514132;color:#ffe19b}
+.mini-number{color:#fcffff}
+.legend-item .legend-dot{border-radius:3px}
+.legend-label{color:#d0e0e1}
+.legend-value{color:#f6fafa}
+.donut:before{background:#1b2a30}
+.room-code code{background:#1b3d42;color:#bffaff}
+.crumb{color:var(--neon-cyan)}
+.text-btn{color:#73ecff}
+.participant{color:#edf7f6;border-color:#3a565d}
+.participant:has(input:checked){background:#21434c;border-color:#5793a0;color:#fff}
+.participant input{accent-color:#1bb8c8}
+
+/* Legible reimbursements: explicit names, direction and amount. */
+.balance-list{gap:12px}
+.balance-item{
+  display:grid;grid-template-columns:52px minmax(0,1fr) auto;
+  align-items:center;gap:12px;
+  border:1px solid #38565f;border-left:4px solid var(--neon-cyan);
+  background:linear-gradient(115deg,#1e3540,#172c33);
+  border-radius:16px;padding:17px 15px;
+}
+.balance-avatars{min-width:0}
+.balance-detail{min-width:0}
+.balance-text{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:7px;row-gap:2px;font-size:17px;line-height:1.32;color:#fff}
+.balance-from,.balance-to{font-size:18px;color:#fff;font-weight:900;overflow-wrap:anywhere}
+.balance-to{color:var(--neon-lime)}
+.balance-direction{font-size:13px;color:#dcf3f4;font-weight:750;letter-spacing:.2px;white-space:nowrap}
+.balance-helper{display:block;color:#a9c4c6;font-size:11px;margin-top:6px}
+.balance-amount{font-size:24px;line-height:1.18;font-weight:900;letter-spacing:-.6px;color:var(--neon-lime);font-variant-numeric:tabular-nums;text-align:right;max-width:100%;overflow-wrap:anywhere}
+.balance-fine{background:#173a3d;color:#b0f2f6;font-size:15px;font-weight:700;border:1px solid #35636a}
+
+/* Category breakdown is now a real filter. */
+.category-filter-row{cursor:pointer;transition:background .15s}
+.category-table tbody tr.category-filter-row:hover{background:#253b44}
+.category-table tbody tr.category-filter-row.is-selected{background:#19414a;box-shadow:inset 4px 0 0 var(--neon-cyan)}
+.category-filter-button{border:0;background:transparent;color:#f6fafa;text-align:left;width:100%;padding:2px 0;cursor:pointer;font-size:inherit;font-weight:inherit;display:block}
+.category-filter-button[aria-pressed=true]{color:#abfaff}
+.category-filter-row.is-selected .cat-icon{border-color:var(--neon-cyan)}
+.category-table .cat-name{color:#f6faf9}
+.cat-stack{display:flex;flex-direction:column;gap:7px}
+.cat-bar-track{display:block;background:#304b53;height:6px;border-radius:20px;overflow:hidden;width:100%;max-width:320px}
+.cat-bar-fill{display:block;height:100%;border-radius:20px}
+.cat-icon{background:#233c43;border-color:#41636b}
+.category-hint{color:#b8cacd}
+.category-note{color:#aabfc0}
+.active-category-filter{
+  background:#1b3944;border:1px solid #366d78;color:#f0ffff;
+  padding:12px 13px;border-radius:15px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:10px;margin:0 0 15px;
+}
+.filter-label{font-size:13px;color:#e6f7f8}
+.filter-label strong{color:var(--neon-cyan);font-weight:850}
+
+/* Two distinct actions on each expense: tap category to filter, tap pencil to edit. */
+.expense-category-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.category-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:800;line-height:1.2;
+  background:#20424b;color:#b5f6ff;border:1px solid #487681;
+  padding:8px 11px;min-height:36px;border-radius:11px;margin:0;
+  max-width:100%;cursor:pointer
+}
+.category-chip:hover{background:#28545f;border-color:#79d6e1}
+.category-chip.selected{background:#235b65;color:#fff;border-color:var(--neon-cyan)}
+.category-chip.none{background:#263740;border-color:#486068;color:#d1e1e2}
+.category-edit{
+  display:inline-grid;place-items:center;height:36px;min-width:38px;
+  background:#283944;border:1px solid #45616c;color:#d7f7f8;
+  border-radius:10px;font-size:17px;cursor:pointer;
+}
+.category-edit:hover{background:#355263;border-color:#78e6f7}
+.expense-delete{height:38px;min-width:38px;font-size:23px;color:#c4d6d9}
+.expense-meta{color:#b1c4c6}
+.expense-icon{border:1px solid #40515a}
+.expense-icon.fuel{background:#17495a}.expense-icon.motorway{background:#3a4c2b}
+.expense-icon.tolls{background:#51412c}.expense-icon.groceries{background:#433d60}
+.expense-icon.food{background:#533443}.expense-icon.home{background:#264963}
+.expense-icon.museums{background:#51482d}.expense-icon.purchase{background:#513c37}
+.expense-icon.leisure{background:#234c43}
+.expense-footer strong{color:var(--neon-lime)}
+.category-dialog{border-color:#446672}
+.category-dialog h2{color:#fff}
+.dialog-actions .btn.ghost{color:#c4f9ff}
+.empty-box{color:#b4c8c9}
+@media(max-width:750px){
+  .balance-item{grid-template-columns:49px minmax(0,1fr);gap:8px 11px;padding:16px 13px}
+  .balance-detail{grid-column:2}
+  .balance-amount{grid-column:2;justify-self:start;text-align:left;font-size:25px;margin-top:4px}
+  .balance-text{font-size:17px}
+  .balance-from,.balance-to{font-size:19px}
+  .category-table .cat-name{gap:6px}
+}
