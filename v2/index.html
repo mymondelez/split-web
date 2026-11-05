@@ -5,20 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0c161b">
 <meta name="description" content="$plit 2 — dividi le spese, controlla il totale e regola i saldi con semplicità.">
-<title>$plit 2 — Le spese, in chiaro</title>
+<title>Split — Gestisci le spese di gruppo</title>
 <link rel="stylesheet" href="../styles-v2.css">
-<link rel="stylesheet" href="./dark-theme.css?v=2">
+<link rel="stylesheet" href="./dark-theme.css?v=2.2">
 </head>
 <body>
 <div class="shell">
   <header class="topbar">
-    <a class="brand" href="./" aria-label="$plit 2, home">
+    <a class="brand" href="./" aria-label="Split, torna alla home">
       <div class="brand-mark"><span>$</span></div>
-      <div><div class="brand-title">plit<span style="color:#0d9f8e">.</span></div><div class="brand-sub">Le spese, in chiaro</div></div>
+      <div class="brand-title">Split<span class="brand-dot">.</span></div>
     </a>
-    <div class="top-right"><span class="mode-tag">● Modalità locale</span><span class="version-tag">VERSIONE 2.1</span></div>
+    <div class="top-right"><span class="version-tag" aria-label="Versione 2.2">V2.2</span></div>
   </header>
-  <p class="notice" role="status">Questa è una nuova versione di prova indipendente: le spese sono salvate esclusivamente in questo browser. Non è collegata al database dell'app originale e i codici non funzionano su altri dispositivi.</p>
   <main>
     <section id="homePage">
       <div class="hero">
@@ -85,7 +84,7 @@
           <div><h2 id="categorySummaryTitle">Spese per categoria</h2><span class="small-muted">Dove vanno i soldi del gruppo</span></div>
           <span class="small-muted">Riepilogo completo</span>
         </div>
-        <p class="category-intro">Le categorie servono solo per analizzare i costi: non cambiano la divisione delle spese né i rimborsi.</p>
+        <p class="category-intro">Tocca una categoria per vedere soltanto le relative spese. Il riepilogo comprende anche le spese senza categoria.</p>
         <div class="category-table-wrap">
           <table class="category-table" aria-label="Riepilogo spese per categoria">
             <thead><tr><th scope="col">Categoria</th><th scope="col" class="num">Spese</th><th scope="col" class="num">Totale</th><th scope="col" class="num">%</th></tr></thead>
@@ -93,12 +92,16 @@
             <tfoot id="categoryTableFoot"></tfoot>
           </table>
         </div>
-        <p class="category-note">Le spese senza categoria sono conteggiate nella voce “Senza categoria”.</p>
+        <p class="category-note">Le categorie aiutano a organizzare i costi, ma non modificano i saldi tra partecipanti.</p>
       </section>
 
       <div class="activity-grid">
         <section class="card">
           <div class="section-header"><div><h2>Le spese</h2><div class="small-muted">Tutti i movimenti del gruppo</div></div><input id="expenseSearch" class="search" type="search" placeholder="⌕ Cerca una spesa" aria-label="Cerca nelle spese"></div>
+          <div id="activeCategoryFilter" class="active-category-filter" role="status" aria-live="polite" hidden>
+            <div class="filter-label">Filtro attivo: <strong id="activeCategoryName"></strong></div>
+            <button type="button" class="btn ghost sm" id="clearCategoryFilter">Mostra tutte ×</button>
+          </div>
           <div id="expensesList" class="expense-list"></div>
           <div class="expense-footer"><span>Totale di tutte le spese</span><strong id="expenseFooterTotal">€ 0,00</strong></div>
         </section>
@@ -126,7 +129,7 @@
       <p class="footer">* Media statistica: totale speso ÷ numero di persone. Non rappresenta il debito individuale.</p>
     </section>
   </main>
-  <footer class="footer">$plit 2 · Prototipo indipendente · Nessuna modifica alla versione originale</footer>
+  <footer class="footer">Split 2.2 · Anteprima: dati salvati solo su questo dispositivo, non sincronizzati · Versione originale invariata</footer>
 </div>
 <dialog id="categoryDialog" class="category-dialog" aria-labelledby="categoryDialogTitle">
   <form id="editCategoryForm">
@@ -142,6 +145,6 @@
   </form>
 </dialog>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-<script type="module" src="./app-v2.js?v=2.1"></script>
+<script type="module" src="./app-v2.js?v=2.2"></script>
 </body>
 </html>
