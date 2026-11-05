@@ -10,7 +10,7 @@
 <meta name="description" content="$plit 2 — dividi le spese, controlla il totale e regola i saldi con semplicità.">
 <title>Split — Spese di gruppo online</title>
 <link rel="stylesheet" href="./styles-v2.css">
-<link rel="stylesheet" href="./dark-theme.css?v=2.3">
+<link rel="stylesheet" href="./dark-theme.css?v=2.4">
 </head>
 <body>
 <div class="shell">
@@ -19,15 +19,11 @@
       <div class="brand-mark"><span>$</span></div>
       <div class="brand-title">Split</div>
     </a>
-    <div class="top-right"><span class="version-tag" aria-label="Split Cloud, versione 2.3">V2.3</span></div>
+    <div class="top-right"><span class="version-tag" aria-label="Split Cloud, versione 2.4">V2.4</span></div>
   </header>
   <div id="cloudStatus" class="cloud-status" role="alert" aria-live="polite" hidden></div>
   <main>
     <section id="homePage">
-      <div class="hero">
-        <div><div class="eyebrow">IL TUO DENARO, SENZA CONFUSIONE</div><h1>Insieme è bello.<br>Fare i conti, facile.</h1><p>Organizza le spese di gruppo, tieni d'occhio quanto spendete e scopri subito chi deve cosa.</p></div>
-        <div class="hero-art" aria-hidden="true"><div class="bubble one">↗</div><div class="bubble two">€</div><div class="bubble three">✓</div></div>
-      </div>
       <div class="grid-two">
         <section class="card">
           <h2 class="card-title">✨ Crea un nuovo $plit</h2><p class="card-subtitle">Una vacanza, una cena o una casa condivisa.</p>
@@ -90,33 +86,7 @@
         </section>
       </div>
 
-      <section class="card category-card" aria-labelledby="categorySummaryTitle">
-        <div class="section-header">
-          <div><h2 id="categorySummaryTitle">Spese per categoria</h2><span class="small-muted">Dove vanno i soldi del gruppo</span></div>
-          <span class="small-muted">Riepilogo completo</span>
-        </div>
-        <p class="category-intro">Tocca una categoria per vedere soltanto le relative spese. Il riepilogo comprende anche le spese senza categoria.</p>
-        <div class="category-table-wrap">
-          <table class="category-table" aria-label="Riepilogo spese per categoria">
-            <thead><tr><th scope="col">Categoria</th><th scope="col" class="num">Spese</th><th scope="col" class="num">Totale</th><th scope="col" class="num">%</th></tr></thead>
-            <tbody id="categoryTableBody"></tbody>
-            <tfoot id="categoryTableFoot"></tfoot>
-          </table>
-        </div>
-        <p class="category-note">Le categorie aiutano a organizzare i costi, ma non modificano i saldi tra partecipanti.</p>
-      </section>
-
-      <div class="activity-grid">
-        <section class="card">
-          <div class="section-header"><div><h2>Le spese</h2><div class="small-muted">Tutti i movimenti del gruppo</div></div><input id="expenseSearch" class="search" type="search" placeholder="⌕ Cerca una spesa" aria-label="Cerca nelle spese"></div>
-          <div id="activeCategoryFilter" class="active-category-filter" role="status" aria-live="polite" hidden>
-            <div class="filter-label">Filtro attivo: <strong id="activeCategoryName"></strong></div>
-            <button type="button" class="btn ghost sm" id="clearCategoryFilter">Mostra tutte ×</button>
-          </div>
-          <div id="expensesList" class="expense-list"></div>
-          <div class="expense-footer"><span id="expenseFooterLabel">Totale di tutte le spese</span><strong id="expenseFooterTotal">€ 0,00</strong></div>
-        </section>
-        <section class="card">
+      <section class="card expense-entry-card">
           <div class="form-top"><h2 class="card-title">＋ Aggiungi una spesa</h2><p class="card-subtitle">Bastano pochi secondi.</p></div>
           <form id="expenseForm">
             <div class="input-row">
@@ -135,12 +105,40 @@
             <p class="muted-note">La spesa viene divisa in parti uguali tra i partecipanti selezionati, anche se chi ha pagato non è incluso.</p>
             <button type="submit" class="btn block">＋ Aggiungi spesa</button>
           </form>
+      </section>
+
+      <section class="card category-card" aria-labelledby="categorySummaryTitle">
+        <div class="section-header">
+          <div><h2 id="categorySummaryTitle">Spese per categoria</h2><span class="small-muted">Dove vanno i soldi del gruppo</span></div>
+          <span class="small-muted">Riepilogo completo</span>
+        </div>
+        <p class="category-intro">Tocca una categoria per vedere soltanto le relative spese. Il riepilogo comprende anche le spese senza categoria.</p>
+        <div class="category-table-wrap">
+          <table class="category-table" aria-label="Riepilogo spese per categoria">
+            <thead><tr><th scope="col">Categoria</th><th scope="col" class="num">Spese</th><th scope="col" class="num">Totale</th><th scope="col" class="num">%</th></tr></thead>
+            <tbody id="categoryTableBody"></tbody>
+            <tfoot id="categoryTableFoot"></tfoot>
+          </table>
+        </div>
+        <p class="category-note">Le categorie aiutano a organizzare i costi, ma non modificano i saldi tra partecipanti.</p>
+      </section>
+
+      <div class="activity-list">
+        <section class="card">
+          <div class="section-header"><div><h2>Le spese</h2><div class="small-muted">Tutti i movimenti del gruppo</div></div><input id="expenseSearch" class="search" type="search" placeholder="⌕ Cerca una spesa" aria-label="Cerca nelle spese"></div>
+          <div id="activeCategoryFilter" class="active-category-filter" role="status" aria-live="polite" hidden>
+            <div class="filter-label">Filtro attivo: <strong id="activeCategoryName"></strong></div>
+            <button type="button" class="btn ghost sm" id="clearCategoryFilter">Mostra tutte ×</button>
+          </div>
+          <div id="expensesList" class="expense-list"></div>
+          <div class="expense-footer"><span id="expenseFooterLabel">Totale di tutte le spese</span><strong id="expenseFooterTotal">€ 0,00</strong></div>
         </section>
+
       </div>
       <p class="footer">* Media statistica: totale speso ÷ numero di persone. Non rappresenta il debito individuale.</p>
     </section>
   </main>
-  <footer class="footer">Split Cloud V2.3 · Gruppi condivisi tramite codice · Versione originale indipendente</footer>
+  <footer class="footer">Split Cloud V2.4 · Gruppi condivisi tramite codice · Versione originale indipendente</footer>
 </div>
 <dialog id="categoryDialog" class="category-dialog" aria-labelledby="categoryDialogTitle">
   <form id="editCategoryForm">
