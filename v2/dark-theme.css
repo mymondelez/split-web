@@ -264,3 +264,10 @@ body{background:radial-gradient(ellipse at 82% -7%,#174047 0,transparent 36%),li
   .balance-from,.balance-to{font-size:19px}
   .category-table .cat-name{gap:6px}
 }
+
+/* Cloud-hosted V2: visible status only during connecting/errors, not a permanent banner */
+.cloud-status{background:#232c38;border:1px solid #51709a;color:#d4e8ff;border-radius:13px;padding:13px 16px;margin-bottom:18px;font-size:13px;line-height:1.5}
+.cloud-status[hidden]{display:none!important}
+.import-local{border-top:1px solid #3a545b;margin-top:25px;padding-top:20px}
+.import-local h3{font-size:16px;font-weight:800;margin:0}
+.import-local .btn.block{margin-top:12px}
