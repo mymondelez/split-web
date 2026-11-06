@@ -1,0 +1,53 @@
+name: Generate Split neon app icons
+on:
+  push:
+    branches: [v2-cloud]
+    paths:
+      - "v2/icon-master-v25.webp"
+      - ".github/workflows/generate-split-icons.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  generate-icons:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out V2 cloud only
+        uses: actions/checkout@v4
+        with:
+          ref: v2-cloud
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install image tools
+        run: python -m pip install --disable-pip-version-check pillow==11.3.0
+      - name: Generate mobile icons from approved artwork
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          root = Path("v2")
+          source = Image.open(root / "icon-master-v25.webp").convert("RGB")
+          for filename, size in (
+              ("icon-192-v25.png", 192),
+              ("icon-512-v25.png", 512),
+              ("apple-touch-icon-v25.png", 180),
+              ("favicon-64-v25.png", 64),
+          ):
+              target = root / filename
+              source.resize((size,size),Image.Resampling.LANCZOS).save(
+                  target, "PNG", optimize=True
+              )
+              print(f"{target}: {size}×{size}")
+          PY
+      - name: Commit only generated V2 assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v2/icon-192-v25.png v2/icon-512-v25.png v2/apple-touch-icon-v25.png v2/favicon-64-v25.png
+          if ! git diff --cached --quiet; then
+            git commit -m "Split Cloud: generate PNG app icon sizes from approved neon S"
+            git push origin HEAD:v2-cloud
+          fi
