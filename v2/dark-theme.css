@@ -276,3 +276,7 @@ body{background:radial-gradient(ellipse at 82% -7%,#174047 0,transparent 36%),li
 .expense-entry-card{margin:0 0 18px}
 .expense-entry-card #expenseForm{max-width:780px}
 .activity-list{margin-bottom:18px}
+
+/* Split Cloud V2.5 — approved intertwined S logo inside app header. */
+.brand-icon{width:49px;height:49px;display:block;flex-shrink:0;object-fit:cover;border-radius:14px;box-shadow:0 8px 22px rgba(8,220,237,.18)}
+@media(max-width:720px){.brand-icon{width:43px;height:43px;border-radius:12px}}
